@@ -381,71 +381,88 @@ class Template
         throw new Exception($message);
     }
 
-    function parse_blocktags_1($matches) {
+    function parse_blocktags_1($matches)
+    {
         return $this->blocktags($matches[1]);
     }
 
-    function parse_datetags_1($matches) {
+    function parse_datetags_1($matches)
+    {
         return $this->datetags($matches[1]);
     }
 
-    function parse_evaltags_2($matches) {
+    function parse_evaltags_2($matches)
+    {
         return $this->evaltags($matches[2]);
     }
 
-    function parse_evaltags_1($matches) {
+    function parse_evaltags_1($matches)
+    {
         return $this->evaltags($matches[1]);
     }
 
-    function parse_addquote_1($matches) {
+    function parse_addquote_1($matches)
+    {
         return $this->addquote('<?='.$matches[1].'?>');
     }
 
-    function parse_stripvtags_template1($matches) {
+    function parse_stripvtags_template1($matches)
+    {
         return $this->stripvtags("\n".'<?php include($template->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
     }
 
-    function parse_stripvtags_css1($matches) {
+    function parse_stripvtags_css1($matches)
+    {
         return $this->stripvtags('<?php echo $template->loadCSSFile(\''.$matches[1].'\'); ?>');
     }
 
-    function parse_stripvtags_js1($matches) {
+    function parse_stripvtags_js1($matches)
+    {
         return $this->stripvtags('<?php echo $template->loadJSFile(\''.$matches[1].'\'); ?>');
     }
 
-    function parse_stripvtags_echo1($matches) {
+    function parse_stripvtags_echo1($matches)
+    {
         return $this->stripvtags($matches[1]);
     }
 
-    function parse_stripvtags_if123($matches) {
+    function parse_stripvtags_if123($matches)
+    {
         return $this->stripvtags($matches[1].'<?php if ('.$matches[2].') { ?>'.$matches[3]);
     }
 
-    function parse_stripvtags_elseif123($matches) {
+    function parse_stripvtags_elseif123($matches)
+    {
         return $this->stripvtags($matches[1].'<?php } elseif ('.$matches[2].') { ?>'.$matches[3]);
     }
 
-    function parse_stripvtags_loop12($matches) {
+    function parse_stripvtags_loop12($matches)
+    {
         return $this->stripvtags("\n".'<?php if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>'."\n");
     }
 
-    function parse_stripvtags_loop123($matches) {
+    function parse_stripvtags_loop123($matches)
+    {
         return $this->stripvtags("\n".'<?php if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>'."\n");
     }
 
-    function parse_transamp_0($matches) {
+    function parse_transamp_0($matches)
+    {
         return $this->transamp($matches[0]);
     }
 
-    function parse_stripscriptamp_12($matches) {
+    function parse_stripscriptamp_12($matches)
+    {
         return $this->stripscriptamp($matches[1], $matches[2]);
     }
 
-    function parse_stripblock_12($matches) {
+    function parse_stripblock_12($matches)
+    {
         return $this->stripblock($matches[1], $matches[2]);
     }
 
-    function blocktags($parameter) {
+    function blocktags($parameter)
+    {
         $bid = intval(trim($parameter));
         $this->blocks[] = $bid;
         $i = count($this->replacecode['search']);
@@ -454,7 +471,8 @@ class Template
         return $search;
     }
 
-    function datetags($parameter) {
+    function datetags($parameter)
+    {
         $parameter = stripslashes($parameter);
         $i = count($this->replacecode['search']);
         $this->replacecode['search'][$i] = $search = "<!--DATE_TAG_$i-->";
@@ -462,45 +480,53 @@ class Template
         return $search;
     }
 
-    function evaltags($php) {
+    function evaltags($php) 
+    {
         $i = count($this->replacecode['search']);
         $this->replacecode['search'][$i] = $search = "<!--EVAL_TAG_$i-->";
         $this->replacecode['replace'][$i] = "<?php $php;?>";
         return $search;
     }
 
-    function stripphpcode($type, $code) {
+    function stripphpcode($type, $code)
+    {
         $this->phpcode[$type][] = $code;
         return '{phpcode:'.$type.'/'.(count($this->phpcode[$type]) - 1).'}';
     }
 
-    function getphptemplate($content) {
+    function getphptemplate($content)
+    {
         $pos = strpos($content, "\n");
         return $pos !== false ? substr($content, $pos + 1) : $content;
     }
 
-    function transamp($str) {
+    function transamp($str)
+    {
         $str = str_replace('&', '&amp;', $str);
         $str = str_replace('&amp;amp;', '&amp;', $str);
         return $str;
     }
 
-    function addquote($var) {
+    function addquote($var)
+    {
         return str_replace("\\\"", "\"", preg_replace("/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\]/s", "['\\1']", $var));
     }
 
-    function stripvtags($expr, $statement = '') {
+    function stripvtags($expr, $statement = '')
+    {
         $expr = str_replace('\\\"', '\"', preg_replace("/\<\?\=(\\\$.+?)\?\>/s", "\\1", $expr));
         $statement = str_replace('\\\"', '\"', $statement);
         return $expr.$statement;
     }
 
-    function stripscriptamp($s, $extra) {
+    function stripscriptamp($s, $extra)
+    {
         $s = str_replace('&amp;', '&', $s);
         return "<script src=\"$s\"$extra></script>";
     }
 
-    function stripblock($var, $s) {
+    function stripblock($var, $s)
+    {
         $s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
         preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
         $constadd = '';
