@@ -7,6 +7,7 @@ class Template
     protected static $instance;
     protected $options = array();
 
+    //Get Instance
     public static function getInstance()
     {
         if (!self::$instance instanceof self) {
@@ -14,14 +15,15 @@ class Template
         }
         return self::$instance;
     }
-
+    
+    //Construct options
     private function __construct()
     {
         $this->options = array(
-            'template_dir' => 'templates' . self::DIR_SEP,
-            'css_dir' => 'css' . self::DIR_SEP,
-            'js_dir' => 'js' . self::DIR_SEP,
-            'cache_dir' => 'templates' . self::DIR_SEP . 'cache' . self::DIR_SEP,
+            'template_dir' => 'templates'.self::DIR_SEP,
+            'css_dir' => 'css'.self::DIR_SEP,
+            'js_dir' => 'js'.self::DIR_SEP,
+            'cache_dir' => 'templates'.self::DIR_SEP.'cache'.self::DIR_SEP,
             'auto_update' => false,
             'cache_lifetime' => 0,
         );
@@ -31,39 +33,42 @@ class Template
     public function setOptions(array $options)
     {
         foreach ($options as $name => $value) {
-            $this->set($name, $value);
+            $this->setTemplate($name, $value);
         }
     }
 
     //Set template parameter
-    public function set($name, $value)
+    private function setTemplate($name, $value)
     {
         switch ($name) {
             case 'template_dir':
                 $value = $this->trimPath($value);
-                if (!file_exists($value)){
-                    $this->throwException("Couldn't found the specified template folder \"$value\"");
+                if (!file_exists($value)) {
+                    $this->throwError('Couldn\'t found the specified template folder', $value);
                 }
                 $this->options['template_dir'] = $value;
                 break;
             case 'css_dir':
                 $value = $this->trimPath($value);
                 if (!file_exists($value)) {
-                    $this->throwException("Couldn't found the specified css folder \"$value\"");
+                    $this->throwError('Couldn\'t found the specified css folder', $value);
                 }
                 $this->options['css_dir'] = $value;
                 break;
             case 'js_dir':
                 $value = $this->trimPath($value);
                 if (!file_exists($value)) {
-                    $this->throwException("Couldn't found the specified js folder \"$value\"");
+                    $this->throwError('Couldn\'t found the specified js folder', $value);
                 }
                 $this->options['js_dir'] = $value;
                 break;
             case 'cache_dir':
                 $value = $this->trimPath($value);
-                if (!file_exists($value)){
-                    $this->throwException("Couldn't found the specified cache folder \"$value\"");
+                if (!file_exists($value)) {
+                    $makepath = $this->makePath($value);
+                    if ($makepath !== true) {
+                        $this->throwError('Can\'t build template folder', $makepath);
+                    }
                 }
                 $this->options['cache_dir'] = $value;
                 break;
@@ -74,27 +79,28 @@ class Template
                 $this->options['cache_lifetime'] = (float) $value;
                 break;
             default:
-                $this->throwException("Unknow template setting options \"$name\"");
+                $this->throwError('Unknow template setting options', $name);
+                break;
         }
     }
 
     public function __set($name, $value)
     {
-        $this->set($name, $value);
+        $this->setTemplate($name, $value);
     }
 
-    private function random($length, $numeric = 0)
+    private function generateRandom($length, $numeric = 0)
     {
         $seed = base_convert(md5(microtime().$_SERVER['DOCUMENT_ROOT']), 16, $numeric ? 10 : 35);
         $seed = $numeric ? (str_replace('0', '', $seed).'012340567890') : ($seed.'zZ'.strtoupper($seed));
-        if($numeric) {
+        if ($numeric) {
             $hash = '';
         } else {
             $hash = chr(rand(1, 26) + rand(0, 1) * 32 + 64);
             $length--;
         }
         $max = strlen($seed) - 1;
-        for($i = 0; $i < $length; $i++) {
+        for ($i = 0; $i < $length; $i++) {
             $hash = $hash.$seed{mt_rand(0, $max)};
         }
         return $hash;
@@ -104,36 +110,34 @@ class Template
     //Get CSS file path
     protected function getCSSFile($file)
     {
-        return $this->trimPath($this->options['css_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['css_dir'].self::DIR_SEP.$file);
     }
 
     //Get CSS version file path
     protected function getCSSVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
-        return $this->trimPath($this->options['cache_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store CSS version value
     protected function cssSaveVersion($file)
     {
         $cssfile = $this->getCSSFile($file);
-
+        //Check file if readable
         if (!is_readable($cssfile)) {
-            $this->throwException("CSS file \"$cssfile\" not found or couldn't be opened !");
+            $this->throwError('CSS file not found or couldn\'t be opened', $cssfile);
         }
-
         //Add md5 check
         $md5data = md5_file($cssfile);
         //Random length random()
-        $verhash = $this->random(7);
-        $versionContent = "$md5data\r\n$verhash";
-
+        $verhash = $this->generateRandom(7);
+        $versionContent = $md5data."\r\n".$verhash;
         //Write version file
         $versionfile = $this->getCSSVersionFile($file);
         $makepath = $this->makePath($versionfile);
         if ($makepath !== true) {
-            $this->throwException("Couldn't build CSS version folder \"$makepath\"");
+            $this->throwError('Couldn\'t build CSS version folder', $makepath);
         }
         file_put_contents($versionfile, $versionContent);
         return $verhash;
@@ -162,42 +166,40 @@ class Template
         }
         $verhash = $this->cssVersionCheck($file);
         $file = $this->getCSSFile($file);
-        return $file.'?'.$verhash;
+        return $file.'?v='.$verhash;
     }
 
     //Get JS file path
     protected function getJSFile($file)
     {
-        return $this->trimPath($this->options['js_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['js_dir'].self::DIR_SEP.$file);
     }
 
     //Get JS version file path
     protected function getJSVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.jsversion.txt', $file);
-        return $this->trimPath($this->options['cache_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store JS version value
     protected function jsSaveVersion($file)
     {
         $jsfile = $this->getJSFile($file);
-
+        //Check file if readable
         if (!is_readable($jsfile)) {
-            $this->throwException("JS file \"$jsfile\" not found or couldn't be opened !");
+            $this->throwError('JS file not found or couldn\'t be opened', $jsfile);
         }
-
         //Add md5 check
         $md5data = md5_file($jsfile);
         //Random length random()
-        $verhash = $this->random(7);
+        $verhash = $this->generateRandom(7);
         $versionContent = "$md5data\r\n$verhash";
-
         //Write version file
         $versionfile = $this->getJSVersionFile($file);
         $makepath = $this->makePath($versionfile);
         if ($makepath !== true) {
-            $this->throwException("Couldn't build JS version folder \"$makepath\"");
+            $this->throwError('Couldn\'t build JS version folder', $makepath);
         }
         file_put_contents($versionfile, $versionContent);
         return $verhash;
@@ -226,7 +228,7 @@ class Template
         }
         $verhash = $this->jsVersionCheck($file);
         $file = $this->getJSFile($file);
-        return $file.'?'.$verhash;
+        return $file.'?v='.$verhash;
     }
 
     /* Template file cache */
@@ -234,36 +236,47 @@ class Template
     {
         $versionfile = $this->getTplVersionFile($file);
         if (!file_exists($versionfile)) {
-            $this->cache($file);
+            $this->parseTemplate($file);
         }
-        $this->check($file);
+        $this->checkTemplate($file);
         $cachefile = $this->getTplCache($file);
+        /*
+        $cachefile = $this->getTplCache($file);
+        if (!file_exists($cachefile)) {
+            $this->parseTemplate($file);
+        }
+        */
         return $cachefile;
     }
 
-    public function check($file)
+    public function checkTemplate($file)
     {
         $versionfile = $this->getTplVersionFile($file);
         $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
         $md5data = $versionContent[0];
         $expireTime = $versionContent[1];
-
-        if ($this->options['auto_update']
-        && md5_file($this->getTplFile($file)) != $md5data) {
-            $this->cache($file);
+        if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
+            $this->parseTemplate($file);
         }
-        if ($this->options['cache_lifetime'] != 0
-        && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
-            $this->cache($file);
+        if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
+            $this->parseTemplate($file);
         }
+        /*
+        if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
+            $this->parseTemplate($file);
+        }
+        if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
+            $this->parseTemplate($file);
+        }
+        */
     }
 
-    //Cache template file
-    public function cache($file)
+    //Parse template file
+    public function parseTemplate($file)
     {
         $tplfile = $this->getTplFile($file);
         if (!is_readable($tplfile)) {
-            $this->throwException("Template file \"$tplfile\" can't find or can't open");
+            $this->throwError('Template file can\'t be found or opened', $tplfile);
         }
 
         //Get template contents
@@ -275,27 +288,32 @@ class Template
         //Filter <!--{}-->
         $template = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
         $template = preg_replace_callback("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/i", array($this, 'parse_blocktags_1'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{date\((.+?)\)\}[\n\r\t]*/i", array($this, 'parse_datetags_1'), $template);
 
-        //Replace special variable
+        //Language
+        $template = preg_replace_callback("/\{lang\s+(.+?)\}/is", array($this, 'parse_language_var_1'), $template);
+
+        //Replace eval function
         $template = preg_replace_callback("/[\n\r\t]*\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}[\n\r\t]*/is", array($this, 'parse_evaltags_2'), $template);
         $template = preg_replace_callback("/[\n\r\t]*\{eval\s+(.+?)\s*\}[\n\r\t]*/is", array($this, 'parse_evaltags_1'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_echo1'), $template);
 
-        //Replace direct variable
+        //Replace direct variable output
         $template = preg_replace("/\{(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)\}/s", "<?=\\1?>", $template);
-        $template = preg_replace_callback("/$var_regexp/s", array($this, 'parse_addquote_1'), $template);
         $template = preg_replace_callback("/\<\?\=\<\?\=$var_regexp\?\>\?\>/s", array($this, 'parse_addquote_1'), $template);
+
+        //Replace $var
+        //$template = preg_replace_callback("/$var_regexp/s", array($this, 'parse_addquote_1'), $template);
 
         //Replace template loading function
         $template = preg_replace_callback("/[\n\r\t]*\{template\s+([a-z0-9_:\/]+)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_template1'), $template);
         $template = preg_replace_callback("/[\n\r\t]*\{template\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_template1'), $template);
 
+        //Replace echo function
+        $template = preg_replace_callback("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_echo1'), $template);
+
         //Replace cssloader
         $template = preg_replace_callback("/[\n\r\t]*\{loadcss\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_css1'), $template);
 
         //Replace jsloader
-        //Replace cssloader
         $template = preg_replace_callback("/[\n\r\t]*\{loadjs\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_js1'), $template);
 
         //Replace if/else script
@@ -324,15 +342,22 @@ class Template
         $template = preg_replace_callback("/[\n\r\t]*\{block\s+([a-zA-Z0-9_\[\]]+)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
         $template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
-
-        //Write cache file
+/*
+        //Add md5 and expiretime check
+        $md5data = md5_file($tplfile);
+        $expireTime = time();
+        $template = "<?php if (!class_exists('Template')) exit('Access Denied');"
+                 ."\$template->getInstance()->checkTemplate('$file', '$md5data', $expireTime);"
+                 ."?>\r\n$template";
+*/
+        //Write into cache file
         $cachefile = $this->getTplCache($file);
         $makepath = $this->makePath($cachefile);
         if ($makepath !== true) {
-            $this->throwException("Can't build template folder \"$makepath\"");
+            $this->throwError('Can\'t build template folder', $makepath);
+        } else {
+            file_put_contents($cachefile, $template."\n");
         }
-        file_put_contents($cachefile, $template);
-
         //Add md5 and expiretime check
         $md5data = md5_file($tplfile);
         $expireTime = time();
@@ -348,19 +373,19 @@ class Template
 
     protected function getTplFile($file)
     {
-        return $this->trimPath($this->options['template_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['template_dir'].self::DIR_SEP.$file);
     }
 
     protected function getTplCache($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cache.php', $file);
-        return $this->trimPath($this->options['cache_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     protected function getTplVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cache.version.txt', $file);
-        return $this->trimPath($this->options['cache_dir'] . self::DIR_SEP . $file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     protected function makePath($path)
@@ -368,100 +393,95 @@ class Template
         $dirs = explode(self::DIR_SEP, dirname($this->trimPath($path)));
         $tmp = '';
         foreach ($dirs as $dir) {
-            $tmp = $tmp . $dir . self::DIR_SEP;
-            if (!file_exists($tmp) && !mkdir($tmp, 0777))
+            $tmp = $tmp.$dir.self::DIR_SEP;
+            if (!file_exists($tmp) && !mkdir($tmp, 0777)) {
                 return $tmp;
+            }
         }
         return true;
     }
 
-    //Throw error excetpion
-    protected function throwException($message)
+    private function parse_language_var_1($matches)
     {
-        throw new Exception($message);
+        return $this->addQuote('<?=$lang[\''.$matches[1].'\'?>');
     }
 
-    function parse_blocktags_1($matches)
+    private function parse_blocktags_1($matches)
     {
-        return $this->blocktags($matches[1]);
+        return $this->blockTags($matches[1]);
     }
 
-    function parse_datetags_1($matches)
+    private function parse_evaltags_1($matches)
     {
-        return $this->datetags($matches[1]);
+        return $this->evalTags($matches[1]);
     }
 
-    function parse_evaltags_2($matches)
+    private function parse_evaltags_2($matches)
     {
-        return $this->evaltags($matches[2]);
+        return $this->evalTags($matches[2]);
     }
 
-    function parse_evaltags_1($matches)
+    private function parse_addquote_1($matches)
     {
-        return $this->evaltags($matches[1]);
+        return $this->addQuote('<?='.$matches[1].'?>');
     }
 
-    function parse_addquote_1($matches)
+    private function parse_stripvtags_template1($matches)
     {
-        return $this->addquote('<?='.$matches[1].'?>');
+        return $this->stripvTags("\n".'<? include($template->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
     }
 
-    function parse_stripvtags_template1($matches)
+    private function parse_stripvtags_css1($matches)
     {
-        return $this->stripvtags("\n".'<?php include($template->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
+        return $this->stripvTags('<? echo $template->loadCSSFile(\''.$matches[1].'\'); ?>');
     }
 
-    function parse_stripvtags_css1($matches)
+    private function parse_stripvtags_js1($matches)
     {
-        return $this->stripvtags('<?php echo $template->loadCSSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags('<? echo $template->loadJSFile(\''.$matches[1].'\'); ?>');
     }
 
-    function parse_stripvtags_js1($matches)
+    private function parse_stripvtags_echo1($matches)
     {
-        return $this->stripvtags('<?php echo $template->loadJSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags($matches[1]);
     }
 
-    function parse_stripvtags_echo1($matches)
+    private function parse_stripvtags_if123($matches)
     {
-        return $this->stripvtags($matches[1]);
+        return $this->stripvTags($matches[1].'<? if ('.$matches[2].') { ?>'.$matches[3]);
     }
 
-    function parse_stripvtags_if123($matches)
+    private function parse_stripvtags_elseif123($matches)
     {
-        return $this->stripvtags($matches[1].'<?php if ('.$matches[2].') { ?>'.$matches[3]);
+        return $this->stripvTags($matches[1].'<? } elseif ('.$matches[2].') { ?>'.$matches[3]);
     }
 
-    function parse_stripvtags_elseif123($matches)
+    private function parse_stripvtags_loop12($matches)
     {
-        return $this->stripvtags($matches[1].'<?php } elseif ('.$matches[2].') { ?>'.$matches[3]);
+        return $this->stripvTags("\n".'<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>'."\n");
     }
 
-    function parse_stripvtags_loop12($matches)
+    private function parse_stripvtags_loop123($matches)
     {
-        return $this->stripvtags("\n".'<?php if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>'."\n");
+        return $this->stripvTags("\n".'<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>'."\n");
     }
 
-    function parse_stripvtags_loop123($matches)
+    private function parse_transamp_0($matches)
     {
-        return $this->stripvtags("\n".'<?php if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>'."\n");
+        return $this->transAmp($matches[0]);
     }
 
-    function parse_transamp_0($matches)
+    private function parse_stripscriptamp_12($matches)
     {
-        return $this->transamp($matches[0]);
+        return $this->stripScriptAmp($matches[1], $matches[2]);
     }
 
-    function parse_stripscriptamp_12($matches)
+    private function parse_stripblock_12($matches)
     {
-        return $this->stripscriptamp($matches[1], $matches[2]);
+        return $this->stripBlock($matches[1], $matches[2]);
     }
 
-    function parse_stripblock_12($matches)
-    {
-        return $this->stripblock($matches[1], $matches[2]);
-    }
-
-    function blocktags($parameter)
+    private function blockTags($parameter)
     {
         $bid = intval(trim($parameter));
         $this->blocks[] = $bid;
@@ -471,67 +491,58 @@ class Template
         return $search;
     }
 
-    function datetags($parameter)
-    {
-        $parameter = stripslashes($parameter);
-        $i = count($this->replacecode['search']);
-        $this->replacecode['search'][$i] = $search = "<!--DATE_TAG_$i-->";
-        $this->replacecode['replace'][$i] = "<?php echo dgmdate($parameter);?>";
-        return $search;
-    }
-
-    function evaltags($php) 
+    private function evalTags($php)
     {
         $i = count($this->replacecode['search']);
         $this->replacecode['search'][$i] = $search = "<!--EVAL_TAG_$i-->";
-        $this->replacecode['replace'][$i] = "<?php $php;?>";
+        $this->replacecode['replace'][$i] = "<?php $php;?>\r";
         return $search;
     }
 
-    function stripphpcode($type, $code)
+    private function stripPHPCode($type, $code)
     {
         $this->phpcode[$type][] = $code;
         return '{phpcode:'.$type.'/'.(count($this->phpcode[$type]) - 1).'}';
     }
 
-    function getphptemplate($content)
+    private function getPHPTemplate($content)
     {
         $pos = strpos($content, "\n");
         return $pos !== false ? substr($content, $pos + 1) : $content;
     }
 
-    function transamp($str)
+    private function transAmp($str)
     {
         $str = str_replace('&', '&amp;', $str);
         $str = str_replace('&amp;amp;', '&amp;', $str);
         return $str;
     }
 
-    function addquote($var)
+    private function addQuote($var)
     {
         return str_replace("\\\"", "\"", preg_replace("/\[([a-zA-Z0-9_\-\.\x7f-\xff]+)\]/s", "['\\1']", $var));
     }
 
-    function stripvtags($expr, $statement = '')
+    private function stripvTags($expr, $statement = '')
     {
         $expr = str_replace('\\\"', '\"', preg_replace("/\<\?\=(\\\$.+?)\?\>/s", "\\1", $expr));
         $statement = str_replace('\\\"', '\"', $statement);
         return $expr.$statement;
     }
 
-    function stripscriptamp($s, $extra)
+    private function stripScriptAmp($s, $extra)
     {
         $s = str_replace('&amp;', '&', $s);
         return "<script src=\"$s\"$extra></script>";
     }
 
-    function stripblock($var, $s)
+    private function stripBlock($var, $s)
     {
         $s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
         preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
         $constadd = '';
         $constary[1] = array_unique($constary[1]);
-        foreach($constary[1] as $const) {
+        foreach ($constary[1] as $const) {
             $constadd = $constadd.'$__'.$const.' = '.$const.';';
         }
         $s = preg_replace("/<\?=(.+?)\?>/", "{\$__\\1}", $s);
@@ -539,5 +550,12 @@ class Template
         $s = str_replace('<?', "\nEOF;\n", $s);
         $s = str_replace("\nphp ", "\n", $s);
         return "<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
+    }
+
+    //Throw error excetpion
+    private function throwError($message, $tplname)
+    {
+        throw new Exception($tplname.' : '.$message);
+        exit();
     }
 }
