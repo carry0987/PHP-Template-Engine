@@ -289,9 +289,6 @@ class Template
         $template = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
         $template = preg_replace_callback("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/i", array($this, 'parse_blocktags_1'), $template);
 
-        //Language
-        $template = preg_replace_callback("/\{lang\s+(.+?)\}/is", array($this, 'parse_language_var_1'), $template);
-
         //Replace eval function
         $template = preg_replace_callback("/[\n\r\t]*\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}[\n\r\t]*/is", array($this, 'parse_evaltags_2'), $template);
         $template = preg_replace_callback("/[\n\r\t]*\{eval\s+(.+?)\s*\}[\n\r\t]*/is", array($this, 'parse_evaltags_1'), $template);
@@ -384,7 +381,7 @@ class Template
 
     protected function getTplVersionFile($file)
     {
-        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cache.version.txt', $file);
+        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.htmlversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
@@ -399,11 +396,6 @@ class Template
             }
         }
         return true;
-    }
-
-    private function parse_language_var_1($matches)
-    {
-        return $this->addQuote('<?=$lang[\''.$matches[1].'\'?>');
     }
 
     private function parse_blocktags_1($matches)
