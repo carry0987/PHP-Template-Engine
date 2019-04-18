@@ -26,6 +26,7 @@ class Template
             'cache_dir' => 'templates'.self::DIR_SEP.'cache'.self::DIR_SEP,
             'auto_update' => false,
             'cache_lifetime' => 0,
+            'cache_db' => false,
         );
     }
 
@@ -78,6 +79,13 @@ class Template
             case 'cache_lifetime':
                 $this->options['cache_lifetime'] = (float) $value;
                 break;
+            case 'cache_db':
+                if ($value === false) {
+                    $this->options['cache_db'] = false;
+                } else {
+                    $this->options['cache_db'] = $value;
+                }
+                break;
             default:
                 $this->throwError('Unknow template setting options', $name);
                 break;
@@ -89,6 +97,7 @@ class Template
         $this->setTemplate($name, $value);
     }
 
+    //Generate Random
     private function generateRandom($length, $numeric = 0)
     {
         $seed = base_convert(md5(microtime().$_SERVER['DOCUMENT_ROOT']), 16, $numeric ? 10 : 35);
@@ -108,6 +117,11 @@ class Template
 
     /* Static file cache */
     //Get CSS file path
+    protected function trimCSSName($file)
+    {
+        return str_replace('.css', '', $file);
+    }
+
     protected function getCSSFile($file)
     {
         return $this->trimPath($this->options['css_dir'].self::DIR_SEP.$file);
@@ -123,36 +137,56 @@ class Template
     //Store CSS version value
     protected function cssSaveVersion($file)
     {
-        $cssfile = $this->getCSSFile($file);
+        //Get CSS file
+        $css_file = $this->getCSSFile($file);
         //Check file if readable
-        if (!is_readable($cssfile)) {
-            $this->throwError('CSS file not found or couldn\'t be opened', $cssfile);
+        if (!is_readable($css_file)) {
+            $this->throwError('CSS file not found or couldn\'t be opened', $css_file);
         }
         //Add md5 check
-        $md5data = md5_file($cssfile);
+        $md5data = md5_file($css_file);
         //Random length random()
         $verhash = $this->generateRandom(7);
-        $versionContent = $md5data."\r\n".$verhash;
-        //Write version file
-        $versionfile = $this->getCSSVersionFile($file);
-        $makepath = $this->makePath($versionfile);
-        if ($makepath !== true) {
-            $this->throwError('Couldn\'t build CSS version folder', $makepath);
+        //Insert md5 & verhash
+        if ($this->options['cache_db'] !== false) {
+            if ($this->getVersion($this->trimCSSName($file), 'css') !== false) {
+                $this->updateVersion($this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+            } else {
+                $this->createVersion($this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+            }
+        } else {
+            $versionContent = $md5data."\r\n".$verhash;
+            //Write version file
+            $versionfile = $this->getCSSVersionFile($file);
+            $makepath = $this->makePath($versionfile);
+            if ($makepath !== true) {
+                $this->throwError('Couldn\'t build CSS version folder', $makepath);
+            }
+            file_put_contents($versionfile, $versionContent);
         }
-        file_put_contents($versionfile, $versionContent);
         return $verhash;
     }
 
     //Check CSS file's change
     protected function cssVersionCheck($file)
     {
-        $versionfile = $this->getCSSVersionFile($file);
-        //Get file contents
-        $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
-        $md5data = $versionContent[0];
-        $verhash = $versionContent[1];
-        if (md5_file($this->getCSSFile($file)) != $md5data) {
-            $verhash = $this->cssSaveVersion($file);
+        if ($this->options['cache_db'] !== false) {
+            $css_file = $this->trimCSSName($file);
+            $static_data = $this->getVersion($css_file, 'css');
+            $md5data = $static_data['tpl_md5'];
+            $verhash = $static_data['tpl_verhash'];
+            if (md5_file($this->getCSSFile($file)) !== $md5data) {
+                $verhash = $this->cssSaveVersion($file);
+            }
+        } else {
+            $versionfile = $this->getCSSVersionFile($file);
+            //Get file contents
+            $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
+            $md5data = $versionContent[0];
+            $verhash = $versionContent[1];
+            if (md5_file($this->getCSSFile($file)) !== $md5data) {
+                $verhash = $this->cssSaveVersion($file);
+            }
         }
         return $verhash;
     }
@@ -160,9 +194,17 @@ class Template
     //Load CSS files
     public function loadCSSFile($file)
     {
-        $versionfile = $this->getCSSVersionFile($file);
-        if (!file_exists($versionfile)) {
-            $this->cssSaveVersion($file);
+        if ($this->options['cache_db'] !== false) {
+            $css_file = $this->trimCSSName($file);
+            $css_version = $this->getVersion($css_file, 'css');
+            if ($css_version === false) {
+                $this->cssSaveVersion($file);
+            }
+        } else {
+            $versionfile = $this->getCSSVersionFile($file);
+            if (!file_exists($versionfile)) {
+                $this->cssSaveVersion($file);
+            }
         }
         $verhash = $this->cssVersionCheck($file);
         $file = $this->getCSSFile($file);
@@ -170,6 +212,11 @@ class Template
     }
 
     //Get JS file path
+    protected function trimJSName($file)
+    {
+        return str_replace('.js', '', $file);
+    }
+
     protected function getJSFile($file)
     {
         return $this->trimPath($this->options['js_dir'].self::DIR_SEP.$file);
@@ -185,36 +232,56 @@ class Template
     //Store JS version value
     protected function jsSaveVersion($file)
     {
-        $jsfile = $this->getJSFile($file);
+        //Get JS file
+        $js_file = $this->getJSFile($file);
         //Check file if readable
-        if (!is_readable($jsfile)) {
-            $this->throwError('JS file not found or couldn\'t be opened', $jsfile);
+        if (!is_readable($js_file)) {
+            $this->throwError('JS file not found or couldn\'t be opened', $js_file);
         }
         //Add md5 check
-        $md5data = md5_file($jsfile);
+        $md5data = md5_file($js_file);
         //Random length random()
         $verhash = $this->generateRandom(7);
-        $versionContent = "$md5data\r\n$verhash";
-        //Write version file
-        $versionfile = $this->getJSVersionFile($file);
-        $makepath = $this->makePath($versionfile);
-        if ($makepath !== true) {
-            $this->throwError('Couldn\'t build JS version folder', $makepath);
+        //Insert md5 & verhash
+        if ($this->options['cache_db'] !== false) {
+            if ($this->getVersion($this->trimJSName($file), 'js') !== false) {
+                $this->updateVersion($this->trimJSName($file), 'js', $md5data, '0', $verhash);
+            } else {
+                $this->createVersion($this->trimJSName($file), 'js', $md5data, '0', $verhash);
+            }
+        } else {
+            $versionContent = $md5data."\r\n".$verhash;
+            //Write version file
+            $versionfile = $this->getJSVersionFile($file);
+            $makepath = $this->makePath($versionfile);
+            if ($makepath !== true) {
+                $this->throwError('Couldn\'t build JS version folder', $makepath);
+            }
+            file_put_contents($versionfile, $versionContent);
         }
-        file_put_contents($versionfile, $versionContent);
         return $verhash;
     }
 
     //Check JS file's change
     protected function jsVersionCheck($file)
     {
-        $versionfile = $this->getJSVersionFile($file);
-        //Get file contents
-        $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
-        $md5data = $versionContent[0];
-        $verhash = $versionContent[1];
-        if (md5_file($this->getJSFile($file)) != $md5data) {
-            $verhash = $this->jsSaveVersion($file);
+        if ($this->options['cache_db'] !== false) {
+            $js_file = $this->trimJSName($file);
+            $static_data = $this->getVersion($js_file, 'js');
+            $md5data = $static_data['tpl_md5'];
+            $verhash = $static_data['tpl_verhash'];
+            if (md5_file($this->getJSFile($file)) !== $md5data) {
+                $verhash = $this->jsSaveVersion($file);
+            }
+        } else {
+            $versionfile = $this->getJSVersionFile($file);
+            //Get file contents
+            $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
+            $md5data = $versionContent[0];
+            $verhash = $versionContent[1];
+            if (md5_file($this->getJSFile($file)) !== $md5data) {
+                $verhash = $this->jsSaveVersion($file);
+            }
         }
         return $verhash;
     }
@@ -222,11 +289,20 @@ class Template
     //Load JS files
     public function loadJSFile($file)
     {
-        $versionfile = $this->getJSVersionFile($file);
-        if (!file_exists($versionfile)) {
-            $this->jsSaveVersion($file);
+        if ($this->options['cache_db'] !== false) {
+            $js_file = $this->trimJSName($file);
+            $js_version = $this->getVersion($js_file, 'js');
+            if ($js_version === false) {
+                $this->jsSaveVersion($file);
+            }
+            $verhash = $this->jsVersionCheck($file);
+        } else {
+            $versionfile = $this->getJSVersionFile($file);
+            if (!file_exists($versionfile)) {
+                $this->jsSaveVersion($file);
+            }
+            $verhash = $this->jsVersionCheck($file);
         }
-        $verhash = $this->jsVersionCheck($file);
         $file = $this->getJSFile($file);
         return $file.'?v='.$verhash;
     }
@@ -234,41 +310,58 @@ class Template
     /* Template file cache */
     public function loadTemplate($file)
     {
-        $versionfile = $this->getTplVersionFile($file);
-        if (!file_exists($versionfile)) {
-            $this->parseTemplate($file);
+        if ($this->options['cache_db'] !== false) {
+            $versionContent = $this->getVersion($file, 'html');
+            if ($versionContent === false) {
+                $this->parseTemplate($file);
+            }
+            $this->checkTemplate($file);
+            $cachefile = $this->getTplCache($file);
+            if (!file_exists($cachefile)) {
+                $this->parseTemplate($file);
+            }
+        } else {
+            $versionfile = $this->getTplVersionFile($file);
+            if (!file_exists($versionfile)) {
+                $this->parseTemplate($file);
+            }
+            $this->checkTemplate($file);
+            $cachefile = $this->getTplCache($file);
+            if (!file_exists($cachefile)) {
+                $this->parseTemplate($file);
+            }
         }
-        $this->checkTemplate($file);
-        $cachefile = $this->getTplCache($file);
-        /*
-        $cachefile = $this->getTplCache($file);
-        if (!file_exists($cachefile)) {
-            $this->parseTemplate($file);
-        }
-        */
         return $cachefile;
     }
 
     public function checkTemplate($file)
     {
-        $versionfile = $this->getTplVersionFile($file);
-        $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
-        $md5data = $versionContent[0];
-        $expireTime = $versionContent[1];
-        if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
-            $this->parseTemplate($file);
+        if ($this->options['cache_db'] !== false) {
+            $versionContent = $this->getVersion($file, 'html');
+            if ($versionContent !== false) {
+                $md5data = $versionContent['tpl_md5'];
+                $expireTime = $versionContent['tpl_expire_time'];
+                if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
+                    $this->parseTemplate($file);
+                }
+                if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
+                    $this->parseTemplate($file);
+                }
+            } else {
+                $this->parseTemplate($file);
+            }
+        } else {
+            $versionfile = $this->getTplVersionFile($file);
+            $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
+            $md5data = $versionContent[0];
+            $expireTime = $versionContent[1];
+            if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
+                $this->parseTemplate($file);
+            }
+            if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
+                $this->parseTemplate($file);
+            }
         }
-        if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
-            $this->parseTemplate($file);
-        }
-        /*
-        if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
-            $this->parseTemplate($file);
-        }
-        if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
-            $this->parseTemplate($file);
-        }
-        */
     }
 
     //Parse template file
@@ -296,9 +389,6 @@ class Template
         //Replace direct variable output
         $template = preg_replace("/\{(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)\}/s", "<?=\\1?>", $template);
         $template = preg_replace_callback("/\<\?\=\<\?\=$var_regexp\?\>\?\>/s", array($this, 'parse_addquote_1'), $template);
-
-        //Replace $var
-        //$template = preg_replace_callback("/$var_regexp/s", array($this, 'parse_addquote_1'), $template);
 
         //Replace template loading function
         $template = preg_replace_callback("/[\n\r\t]*\{template\s+([a-z0-9_:\/]+)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_template1'), $template);
@@ -339,14 +429,7 @@ class Template
         $template = preg_replace_callback("/[\n\r\t]*\{block\s+([a-zA-Z0-9_\[\]]+)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
         $template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
-/*
-        //Add md5 and expiretime check
-        $md5data = md5_file($tplfile);
-        $expireTime = time();
-        $template = "<?php if (!class_exists('Template')) exit('Access Denied');"
-                 ."\$template->getInstance()->checkTemplate('$file', '$md5data', $expireTime);"
-                 ."?>\r\n$template";
-*/
+
         //Write into cache file
         $cachefile = $this->getTplCache($file);
         $makepath = $this->makePath($cachefile);
@@ -355,12 +438,31 @@ class Template
         } else {
             file_put_contents($cachefile, $template."\n");
         }
-        //Add md5 and expiretime check
-        $md5data = md5_file($tplfile);
-        $expireTime = time();
-        $versionContent = "$md5data\r\n$expireTime";
-        $versionfile = $this->getTplVersionFile($file);
-        file_put_contents($versionfile, $versionContent);
+
+        if ($this->options['cache_db'] !== false) {
+            //Insert md5 and expiretime into cache database
+            $md5data = md5_file($tplfile);
+            $expireTime = time();
+            $versionContent['tpl_md5'] = $md5data;
+            $versionContent['tpl_expire_time'] = $expireTime;
+            if ($this->getVersion($file, 'html') !== false) {
+                $this->updateVersion($file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
+            } else {
+                $this->createVersion($file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
+            }
+        } else {
+            //Add md5 and expiretime check
+            $md5data = md5_file($tplfile);
+            $expireTime = time();
+            $versionContent = "$md5data\r\n$expireTime";
+            $versionfile = $this->getTplVersionFile($file);
+            file_put_contents($versionfile, $versionContent);
+        }
+    }
+
+    protected function trimTplName($file)
+    {
+        return str_replace('.html', '', $file);
     }
 
     protected function trimPath($path)
@@ -383,6 +485,75 @@ class Template
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.htmlversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
+    }
+
+    protected function getVersion($get_tpl_name, $get_tpl_type)
+    {
+        $get_tpl_name = $this->trimTplName($get_tpl_name);
+        $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_name = ? AND tpl_type = ?';
+        $tpl_stmt = $this->options['cache_db']->stmt_init();
+        try {
+            $tpl_stmt->prepare($tpl_query);
+            $tpl_stmt->bind_param('ss', $get_tpl_name, $get_tpl_type);
+            $tpl_stmt->execute();
+            $tpl_stmt->bind_result($tpl_md5, $tpl_expire_time, $tpl_verhash);
+            $tpl_result = $tpl_stmt->get_result();
+            if ($tpl_result->num_rows != 0) {
+                $tpl_row = $tpl_result->fetch_assoc();
+                return $tpl_row;
+            } else {
+                return false;
+            }
+        } catch (Exception $e) {
+            return $e->getMessage();
+            exit();
+        }
+    }
+
+    protected function createVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    {
+        $tpl_name = $this->trimTplName($tpl_name);
+        $tpl_query = 'INSERT INTO template (tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?)';
+        $tpl_stmt = $this->options['cache_db']->stmt_init();
+        try {
+            $tpl_stmt->prepare($tpl_query);
+            $tpl_stmt->bind_param('sssis', 
+                $tpl_name, 
+                $tpl_type, 
+                $tpl_md5, 
+                $tpl_expire_time, 
+                $tpl_verhash
+            );
+            $tpl_stmt->execute();
+        } catch (Exception $e) {
+            echo '<h1>Service unavailable</h1>';
+            echo '<br />';
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
+            exit();
+        }
+    }
+
+    protected function updateVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    {
+        $tpl_name = $this->trimTplName($tpl_name);
+        $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_name = ? AND tpl_type = ?';
+        $tpl_stmt = $this->options['cache_db']->stmt_init();
+        try {
+            $tpl_stmt->prepare($tpl_query);
+            $tpl_stmt->bind_param('sisss', 
+                $tpl_md5, 
+                $tpl_expire_time, 
+                $tpl_verhash, 
+                $tpl_name, 
+                $tpl_type
+            );
+            $tpl_stmt->execute();
+        } catch (Exception $e) {
+            echo '<h1>Service unavailable</h1>';
+            echo '<br />';
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
+            exit();
+        }
     }
 
     protected function makePath($path)

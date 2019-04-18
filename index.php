@@ -1,5 +1,6 @@
 <?php
 require dirname(__FILE__).'/class/class_template.php';
+
 //Template setting
 $options = array(
     'template_dir' => 'template',
@@ -8,6 +9,8 @@ $options = array(
     'cache_dir' => 'cache',
     'auto_update' => true,
     'cache_lifetime' => 0,
+    'cache_db' => false
+    //'cache_db' => $connectdb
 );
 
 $template = Template::getInstance();
@@ -16,4 +19,3 @@ $template->setOptions($options);
 $array = array('testa' => 'a', 'testb' => 'b');
 //Include template file
 include($template->loadTemplate('template.html'));
-

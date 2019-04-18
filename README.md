@@ -2,6 +2,32 @@
 Small php template engine
 
 ## Usage
+Now you can choose saving version of template file to local or database  
+
+Save to local
+```php
+//Template setting
+$options = array(
+    'cache_db' => false
+);
+```
+Save to database
+```php
+//Connect to Database
+try {
+    $connectdb = new mysqli('localhost', 'root', 'root', 'template');
+    $connectdb->query('SET CHARACTER SET utf8');
+} catch (Exception $e) {
+    $e->getMessage();
+    exit();
+}
+
+//Template setting
+$options = array(
+    'cache_db' => $connectdb
+);
+```
+## Functions
 echo function
 html
 ```html
