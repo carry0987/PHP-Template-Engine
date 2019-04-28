@@ -1,11 +1,11 @@
 <?php
 class Template
 {
-    public $replacecode = array('search' => array(), 'replace' => array());
-    public $blocks = array();
+    private $replacecode = array('search' => array(), 'replace' => array());
+    private $blocks = array();
     const DIR_SEP = DIRECTORY_SEPARATOR;
-    protected static $instance;
-    protected $options = array();
+    private static $instance;
+    private $options = array();
 
     //Get Instance
     public static function getInstance()
@@ -15,7 +15,7 @@ class Template
         }
         return self::$instance;
     }
-    
+
     //Construct options
     private function __construct()
     {
@@ -97,7 +97,6 @@ class Template
         $this->setTemplate($name, $value);
     }
 
-    //Generate Random
     private function generateRandom($length, $numeric = 0)
     {
         $seed = base_convert(md5(microtime().$_SERVER['DOCUMENT_ROOT']), 16, $numeric ? 10 : 35);
@@ -117,25 +116,25 @@ class Template
 
     /* Static file cache */
     //Get CSS file path
-    protected function trimCSSName($file)
+    private function trimCSSName($file)
     {
         return str_replace('.css', '', $file);
     }
 
-    protected function getCSSFile($file)
+    private function getCSSFile($file)
     {
         return $this->trimPath($this->options['css_dir'].self::DIR_SEP.$file);
     }
 
     //Get CSS version file path
-    protected function getCSSVersionFile($file)
+    private function getCSSVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store CSS version value
-    protected function cssSaveVersion($file)
+    private function cssSaveVersion($file)
     {
         //Get CSS file
         $css_file = $this->getCSSFile($file);
@@ -168,7 +167,7 @@ class Template
     }
 
     //Check CSS file's change
-    protected function cssVersionCheck($file)
+    private function cssVersionCheck($file)
     {
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
@@ -212,25 +211,25 @@ class Template
     }
 
     //Get JS file path
-    protected function trimJSName($file)
+    private function trimJSName($file)
     {
         return str_replace('.js', '', $file);
     }
 
-    protected function getJSFile($file)
+    private function getJSFile($file)
     {
         return $this->trimPath($this->options['js_dir'].self::DIR_SEP.$file);
     }
 
     //Get JS version file path
-    protected function getJSVersionFile($file)
+    private function getJSVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.jsversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store JS version value
-    protected function jsSaveVersion($file)
+    private function jsSaveVersion($file)
     {
         //Get JS file
         $js_file = $this->getJSFile($file);
@@ -263,7 +262,7 @@ class Template
     }
 
     //Check JS file's change
-    protected function jsVersionCheck($file)
+    private function jsVersionCheck($file)
     {
         if ($this->options['cache_db'] !== false) {
             $js_file = $this->trimJSName($file);
@@ -334,7 +333,7 @@ class Template
         return $cachefile;
     }
 
-    public function checkTemplate($file)
+    private function checkTemplate($file)
     {
         if ($this->options['cache_db'] !== false) {
             $versionContent = $this->getVersion($file, 'html');
@@ -431,7 +430,7 @@ class Template
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
 
         //Protect cache file
-        $template = '<?php if (!class_exists(\'Template\')) die(\'Access Denied\');?>'."\r\n".$template;
+        $template = '<?php if (!class_exists(\'template\')) die(\'Access Denied\');?>'."\r\n".$template;
 
         //Write into cache file
         $cachefile = $this->getTplCache($file);
@@ -463,34 +462,34 @@ class Template
         }
     }
 
-    protected function trimTplName($file)
+    private function trimTplName($file)
     {
         return str_replace('.html', '', $file);
     }
 
-    protected function trimPath($path)
+    private function trimPath($path)
     {
         return str_replace(array('/', '\\', '//', '\\\\'), self::DIR_SEP, $path);
     }
 
-    protected function getTplFile($file)
+    private function getTplFile($file)
     {
         return $this->trimPath($this->options['template_dir'].self::DIR_SEP.$file);
     }
 
-    protected function getTplCache($file)
+    private function getTplCache($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cache.php', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
-    protected function getTplVersionFile($file)
+    private function getTplVersionFile($file)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.htmlversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
-    protected function getVersion($get_tpl_name, $get_tpl_type)
+    private function getVersion($get_tpl_name, $get_tpl_type)
     {
         $get_tpl_name = $this->trimTplName($get_tpl_name);
         $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_name = ? AND tpl_type = ?';
@@ -513,7 +512,7 @@ class Template
         }
     }
 
-    protected function createVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    private function createVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
     {
         $tpl_name = $this->trimTplName($tpl_name);
         $tpl_query = 'INSERT INTO template (tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?)';
@@ -536,7 +535,7 @@ class Template
         }
     }
 
-    protected function updateVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    private function updateVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
     {
         $tpl_name = $this->trimTplName($tpl_name);
         $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_name = ? AND tpl_type = ?';
@@ -559,7 +558,7 @@ class Template
         }
     }
 
-    protected function makePath($path)
+    private function makePath($path)
     {
         $dirs = explode(self::DIR_SEP, dirname($this->trimPath($path)));
         $tmp = '';
@@ -652,16 +651,33 @@ class Template
         $bid = intval(trim($parameter));
         $this->blocks[] = $bid;
         $i = count($this->replacecode['search']);
-        $this->replacecode['search'][$i] = $search = "<!--BLOCK_TAG_$i-->";
-        $this->replacecode['replace'][$i] = "<?php block_display('$bid');?>";
+        $this->replacecode['search'][$i] = $search = '<!--BLOCK_TAG_'.$i.'-->';
+        $this->replacecode['replace'][$i] = '<?php block_display(\''.$bid.'\');?>';
         return $search;
+    }
+
+    private function stripBlock($var, $s)
+    {
+        $s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
+        preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
+        $constadd = '';
+        $constary[1] = array_unique($constary[1]);
+        foreach ($constary[1] as $const) {
+            $constadd = $constadd.'$__'.$const.' = '.$const.';';
+        }
+        $s = preg_replace("/<\?=(.+?)\?>/", "{\$__\\1}", $s);
+        $s = str_replace('?>', "\n\$$var = $var.<<<EOF\n", $s);
+        $s = str_replace('<?', "\nEOF;\n", $s);
+        $s = str_replace("\nphp ", "\n", $s);
+        return "\n<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
     }
 
     private function evalTags($php)
     {
+        $php = str_replace('\"', '"', $php);
         $i = count($this->replacecode['search']);
-        $this->replacecode['search'][$i] = $search = "<!--EVAL_TAG_$i-->";
-        $this->replacecode['replace'][$i] = "<?php $php;?>\r";
+        $this->replacecode['search'][$i] = $search = '<!--EVAL_TAG_'.$i.'-->';
+        $this->replacecode['replace'][$i] = "\n".'<? '."\r".$php."\n".'?>';
         return $search;
     }
 
@@ -700,22 +716,6 @@ class Template
     {
         $s = str_replace('&amp;', '&', $s);
         return "<script src=\"$s\"$extra></script>";
-    }
-
-    private function stripBlock($var, $s)
-    {
-        $s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
-        preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
-        $constadd = '';
-        $constary[1] = array_unique($constary[1]);
-        foreach ($constary[1] as $const) {
-            $constadd = $constadd.'$__'.$const.' = '.$const.';';
-        }
-        $s = preg_replace("/<\?=(.+?)\?>/", "{\$__\\1}", $s);
-        $s = str_replace('?>', "\n\$$var = $var.<<<EOF\n", $s);
-        $s = str_replace('<?', "\nEOF;\n", $s);
-        $s = str_replace("\nphp ", "\n", $s);
-        return "<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
     }
 
     //Throw error excetpion
