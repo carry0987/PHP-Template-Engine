@@ -1,6 +1,9 @@
 # Template-Engine
 Small php template engine
 
+## Thanks
+Template **regex function** &amp; **cache method** with big thanks to **[TXGZ](https://github.com/txgz999)**
+
 ## Usage
 Now you can choose saving version of template file to local or database  
 
