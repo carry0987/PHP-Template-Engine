@@ -430,6 +430,9 @@ class Template
         $template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
 
+        //Protect cache file
+        $template = '<?php if (!class_exists(\'Template\')) die(\'Access Denied\');?>'."\r\n".$template;
+
         //Write into cache file
         $cachefile = $this->getTplCache($file);
         $makepath = $this->makePath($cachefile);
