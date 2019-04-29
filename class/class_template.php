@@ -506,8 +506,10 @@ class Template
             } else {
                 return false;
             }
-        } catch (Exception $e) {
-            return $e->getMessage();
+        } catch (mysqli_sql_exception $e) {
+            echo '<h1>Service unavailable</h1>';
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
+            echo '<h3>Error Code :'.$e->getCode().'</h3>';
             exit();
         }
     }
@@ -527,10 +529,10 @@ class Template
                 $tpl_verhash
             );
             $tpl_stmt->execute();
-        } catch (Exception $e) {
+        } catch (mysqli_sql_exception $e) {
             echo '<h1>Service unavailable</h1>';
-            echo '<br />';
             echo '<h2>Error Info :'.$e->getMessage().'</h2>';
+            echo '<h3>Error Code :'.$e->getCode().'</h3>';
             exit();
         }
     }
@@ -550,10 +552,10 @@ class Template
                 $tpl_type
             );
             $tpl_stmt->execute();
-        } catch (Exception $e) {
+        } catch (mysqli_sql_exception $e) {
             echo '<h1>Service unavailable</h1>';
-            echo '<br />';
             echo '<h2>Error Info :'.$e->getMessage().'</h2>';
+            echo '<h3>Error Code :'.$e->getCode().'</h3>';
             exit();
         }
     }
