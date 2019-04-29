@@ -507,9 +507,9 @@ class Template
                 return false;
             }
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>';
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
-            echo '<h3>Error Code :'.$e->getCode().'</h3>';
+            echo '<h1>Service unavailable</h1>'."\n";
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
+            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
             exit();
         }
     }
@@ -530,9 +530,9 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>';
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
-            echo '<h3>Error Code :'.$e->getCode().'</h3>';
+            echo '<h1>Service unavailable</h1>'."\n";
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
+            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
             exit();
         }
     }
@@ -553,9 +553,9 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>';
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>';
-            echo '<h3>Error Code :'.$e->getCode().'</h3>';
+            echo '<h1>Service unavailable</h1>'."\n";
+            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
+            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
             exit();
         }
     }
