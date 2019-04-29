@@ -430,7 +430,7 @@ class Template
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
 
         //Protect cache file
-        $template = '<?php if (!class_exists(\'template\')) die(\'Access Denied\');?>'."\r\n".$template;
+        $template = '<?php if (!class_exists(\'Template\')) die(\'Access Denied\');?>'."\r\n".$template;
 
         //Write into cache file
         $cachefile = $this->getTplCache($file);
