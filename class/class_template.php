@@ -595,17 +595,17 @@ class Template
 
     private function parse_stripvtags_template1($matches)
     {
-        return $this->stripvTags("\n".'<? include($template->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
+        return $this->stripvTags("\n".'<? include(Template::getInstance()->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
     }
 
     private function parse_stripvtags_css1($matches)
     {
-        return $this->stripvTags('<? echo $template->loadCSSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\'); ?>');
     }
 
     private function parse_stripvtags_js1($matches)
     {
-        return $this->stripvTags('<? echo $template->loadJSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadJSFile(\''.$matches[1].'\'); ?>');
     }
 
     private function parse_stripvtags_echo1($matches)
