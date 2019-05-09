@@ -425,7 +425,7 @@ class Template
         //Other replace
         $template = preg_replace_callback("/\"(http)?[\w\.\/:]+\?[^\"]+?&[^\"]+?\"/", array($this, 'parse_transamp_0'), $template);
         $template = preg_replace_callback("/\<script[^\>]*?src=\"(.+?)\"(.*?)\>\s*\<\/script\>/is", array($this, 'parse_stripscriptamp_12'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{block\s+([a-zA-Z0-9_\[\]]+)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
+        $template = preg_replace_callback("/[\n\r\t]*\{block\s+(.+?)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
         $template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
 
