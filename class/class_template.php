@@ -397,10 +397,10 @@ class Template
         $template = preg_replace_callback("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_echo1'), $template);
 
         //Replace cssloader
-        $template = preg_replace_callback("/[\n\r\t]*\{loadcss\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_css1'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(.+?)\}/is", array($this, 'parse_stripvtags_css1'), $template);
 
         //Replace jsloader
-        $template = preg_replace_callback("/[\n\r\t]*\{loadjs\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_js1'), $template);
+        $template = preg_replace_callback("/\{loadjs\s+(.+?)\}/is", array($this, 'parse_stripvtags_js1'), $template);
 
         //Replace if/else script
         $template = preg_replace_callback("/([\n\r\t]*)\{if\s+(.+?)\}([\n\r\t]*)/is", array($this, 'parse_stripvtags_if123'), $template);
