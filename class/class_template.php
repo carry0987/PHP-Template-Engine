@@ -464,6 +464,7 @@ class Template
 
     private function dashPath($path)
     {
+        $path = rtrim($path, '/\\');
         return str_replace(array('/', '\\', '//', '\\\\'), '-', $path);
     }
 
@@ -686,7 +687,7 @@ class Template
         $php = str_replace('\"', '"', $php);
         $i = count($this->replacecode['search']);
         $this->replacecode['search'][$i] = $search = '<!--EVAL_TAG_'.$i.'-->';
-        $this->replacecode['replace'][$i] = "\n".'<? '."\r".$php."\n".'?>';
+        $this->replacecode['replace'][$i] = "\r".'<? '."\n".$php."\n".'?>';
         return $search;
     }
 
