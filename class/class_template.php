@@ -364,7 +364,7 @@ class Template
     }
 
     //Parse template file
-    public function parseTemplate($file)
+    private function parseTemplate($file)
     {
         $tplfile = $this->getTplFile($file);
         if (!is_readable($tplfile)) {
