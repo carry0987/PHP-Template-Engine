@@ -610,7 +610,7 @@ class Template
 
     private function parse_stripvtags_echo1($matches)
     {
-        return $this->stripvTags($matches[1]);
+        return $this->stripvTags('<? echo '.$matches[1].';?>');
     }
 
     private function parse_stripvtags_if123($matches)
