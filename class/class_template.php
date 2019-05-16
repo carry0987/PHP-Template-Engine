@@ -148,10 +148,10 @@ class Template
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
         if ($this->options['cache_db'] !== false) {
-            if ($this->getVersion($this->trimCSSName($file), 'css') !== false) {
-                $this->updateVersion($this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+            if ($this->getVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css') !== false) {
+                $this->updateVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, '0', $verhash);
             } else {
-                $this->createVersion($this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+                $this->createVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, '0', $verhash);
             }
         } else {
             $versionContent = $md5data."\r\n".$verhash;
@@ -171,7 +171,7 @@ class Template
     {
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
-            $static_data = $this->getVersion($css_file, 'css');
+            $static_data = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
             if (md5_file($this->getCSSFile($file)) !== $md5data) {
@@ -195,7 +195,7 @@ class Template
     {
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
-            $css_version = $this->getVersion($css_file, 'css');
+            $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             if ($css_version === false) {
                 $this->cssSaveVersion($file);
             }
@@ -243,10 +243,10 @@ class Template
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
         if ($this->options['cache_db'] !== false) {
-            if ($this->getVersion($this->trimJSName($file), 'js') !== false) {
-                $this->updateVersion($this->trimJSName($file), 'js', $md5data, '0', $verhash);
+            if ($this->getVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js') !== false) {
+                $this->updateVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, '0', $verhash);
             } else {
-                $this->createVersion($this->trimJSName($file), 'js', $md5data, '0', $verhash);
+                $this->createVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, '0', $verhash);
             }
         } else {
             $versionContent = $md5data."\r\n".$verhash;
@@ -266,7 +266,7 @@ class Template
     {
         if ($this->options['cache_db'] !== false) {
             $js_file = $this->trimJSName($file);
-            $static_data = $this->getVersion($js_file, 'js');
+            $static_data = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
             if (md5_file($this->getJSFile($file)) !== $md5data) {
@@ -290,7 +290,7 @@ class Template
     {
         if ($this->options['cache_db'] !== false) {
             $js_file = $this->trimJSName($file);
-            $js_version = $this->getVersion($js_file, 'js');
+            $js_version = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
             if ($js_version === false) {
                 $this->jsSaveVersion($file);
             }
@@ -310,7 +310,7 @@ class Template
     public function loadTemplate($file)
     {
         if ($this->options['cache_db'] !== false) {
-            $versionContent = $this->getVersion($file, 'html');
+            $versionContent = $this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html');
             if ($versionContent === false) {
                 $this->parseTemplate($file);
             }
@@ -336,7 +336,7 @@ class Template
     private function checkTemplate($file)
     {
         if ($this->options['cache_db'] !== false) {
-            $versionContent = $this->getVersion($file, 'html');
+            $versionContent = $this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html');
             if ($versionContent !== false) {
                 $md5data = $versionContent['tpl_md5'];
                 $expireTime = $versionContent['tpl_expire_time'];
@@ -447,10 +447,10 @@ class Template
             $expireTime = time();
             $versionContent['tpl_md5'] = $md5data;
             $versionContent['tpl_expire_time'] = $expireTime;
-            if ($this->getVersion($file, 'html') !== false) {
-                $this->updateVersion($file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
+            if ($this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html') !== false) {
+                $this->updateVersion($this->dashPath($this->options['template_dir']), $file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
             } else {
-                $this->createVersion($file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
+                $this->createVersion($this->dashPath($this->options['template_dir']), $file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
             }
         } else {
             //Add md5 and expiretime check
@@ -460,6 +460,11 @@ class Template
             $versionfile = $this->getTplVersionFile($file);
             file_put_contents($versionfile, $versionContent);
         }
+    }
+
+    private function dashPath($path)
+    {
+        return str_replace(array('/', '\\', '//', '\\\\'), '-', $path);
     }
 
     private function trimTplName($file)
@@ -489,14 +494,14 @@ class Template
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
-    private function getVersion($get_tpl_name, $get_tpl_type)
+    private function getVersion($get_tpl_path, $get_tpl_name, $get_tpl_type)
     {
         $get_tpl_name = $this->trimTplName($get_tpl_name);
-        $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_name = ? AND tpl_type = ?';
+        $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
         $tpl_stmt = $this->options['cache_db']->stmt_init();
         try {
             $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('ss', $get_tpl_name, $get_tpl_type);
+            $tpl_stmt->bind_param('sss', $get_tpl_path, $get_tpl_name, $get_tpl_type);
             $tpl_stmt->execute();
             $tpl_stmt->bind_result($tpl_md5, $tpl_expire_time, $tpl_verhash);
             $tpl_result = $tpl_stmt->get_result();
@@ -514,14 +519,15 @@ class Template
         }
     }
 
-    private function createVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    private function createVersion($tpl_path, $tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
     {
         $tpl_name = $this->trimTplName($tpl_name);
-        $tpl_query = 'INSERT INTO template (tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?)';
+        $tpl_query = 'INSERT INTO template (tpl_path, tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?,?)';
         $tpl_stmt = $this->options['cache_db']->stmt_init();
         try {
             $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('sssis', 
+            $tpl_stmt->bind_param('ssssis', 
+                $tpl_path, 
                 $tpl_name, 
                 $tpl_type, 
                 $tpl_md5, 
@@ -537,17 +543,18 @@ class Template
         }
     }
 
-    private function updateVersion($tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
+    private function updateVersion($tpl_path, $tpl_name, $tpl_type, $tpl_md5, $tpl_expire_time, $tpl_verhash)
     {
         $tpl_name = $this->trimTplName($tpl_name);
-        $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_name = ? AND tpl_type = ?';
+        $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
         $tpl_stmt = $this->options['cache_db']->stmt_init();
         try {
             $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('sisss', 
+            $tpl_stmt->bind_param('sissss', 
                 $tpl_md5, 
                 $tpl_expire_time, 
                 $tpl_verhash, 
+                $tpl_path, 
                 $tpl_name, 
                 $tpl_type
             );
