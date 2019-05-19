@@ -378,7 +378,7 @@ class Template
         $template = preg_replace("/([\n\r]+)\t+/s", "\\1", $template);
 
         //Filter <!--{}-->
-        $template = preg_replace("/\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
+        $template = preg_replace("/ *\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
         $template = preg_replace_callback("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/i", array($this, 'parse_blocktags_1'), $template);
 
         //Replace eval function
