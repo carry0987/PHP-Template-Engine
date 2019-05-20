@@ -379,22 +379,22 @@ class Template
 
         //Filter <!--{}-->
         $template = preg_replace("/ *\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{block\/(\d+?)\}[\n\r\t]*/i", array($this, 'parse_blocktags_1'), $template);
+        $template = preg_replace_callback("/\{block\/(\d+?)\}/i", array($this, 'parse_blocktags_1'), $template);
 
         //Replace eval function
-        $template = preg_replace_callback("/[\n\r\t]*\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}[\n\r\t]*/is", array($this, 'parse_evaltags_2'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{eval\s+(.+?)\s*\}[\n\r\t]*/is", array($this, 'parse_evaltags_1'), $template);
+        $template = preg_replace_callback("/\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}/is", array($this, 'parse_evaltags_2'), $template);
+        $template = preg_replace_callback("/\{eval\s+(.+?)\s*\}/is", array($this, 'parse_evaltags_1'), $template);
 
         //Replace direct variable output
         $template = preg_replace("/\{(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)\}/s", "<?=\\1?>", $template);
         $template = preg_replace_callback("/\<\?\=\<\?\=$var_regexp\?\>\?\>/s", array($this, 'parse_addquote_1'), $template);
 
         //Replace template loading function
-        $template = preg_replace_callback("/[\n\r\t]*\{template\s+([a-z0-9_:\/]+)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_template1'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{template\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_template1'), $template);
+        $template = preg_replace_callback("/\{template\s+([a-z0-9_:\/]+)\}/is", array($this, 'parse_stripvtags_template1'), $template);
+        $template = preg_replace_callback("/\{template\s+(.+?)\}/is", array($this, 'parse_stripvtags_template1'), $template);
 
         //Replace echo function
-        $template = preg_replace_callback("/[\n\r\t]*\{echo\s+(.+?)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_echo1'), $template);
+        $template = preg_replace_callback("/\{echo\s+(.+?)\}/is", array($this, 'parse_stripvtags_echo1'), $template);
 
         //Replace cssloader
         $template = preg_replace_callback("/\{loadcss\s+(.+?)\}/is", array($this, 'parse_stripvtags_css1'), $template);
@@ -403,14 +403,14 @@ class Template
         $template = preg_replace_callback("/\{loadjs\s+(.+?)\}/is", array($this, 'parse_stripvtags_js1'), $template);
 
         //Replace if/else script
-        $template = preg_replace_callback("/([\n\r\t]*)\{if\s+(.+?)\}([\n\r\t]*)/is", array($this, 'parse_stripvtags_if123'), $template);
-        $template = preg_replace_callback("/([\n\r\t]*)\{elseif\s+(.+?)\}([\n\r\t]*)/is", array($this, 'parse_stripvtags_elseif123'), $template);
+        $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'parse_stripvtags_if123'), $template);
+        $template = preg_replace_callback("/\{elseif\s+(.+?)\}/is", array($this, 'parse_stripvtags_elseif123'), $template);
         $template = preg_replace("/\{else\}/i", "<?php } else { ?>", $template);
         $template = preg_replace("/\{\/if\}/i", "<?php } ?>", $template);
 
         //Replace loop script
-        $template = preg_replace_callback("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_loop12'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}[\n\r\t]*/is", array($this, 'parse_stripvtags_loop123'), $template);
+        $template = preg_replace_callback("/\{loop\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_loop12'), $template);
+        $template = preg_replace_callback("/\{loop\s+(\S+)\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_loop123'), $template);
         $template = preg_replace("/\{\/loop\}/i", "<?php } ?>", $template);
 
         //Replace constant
@@ -425,7 +425,7 @@ class Template
         //Other replace
         $template = preg_replace_callback("/\"(http)?[\w\.\/:]+\?[^\"]+?&[^\"]+?\"/", array($this, 'parse_transamp_0'), $template);
         $template = preg_replace_callback("/\<script[^\>]*?src=\"(.+?)\"(.*?)\>\s*\<\/script\>/is", array($this, 'parse_stripscriptamp_12'), $template);
-        $template = preg_replace_callback("/[\n\r\t]*\{block\s+(.+?)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
+        $template = preg_replace_callback("/\{block\s+(.+?)\}(.+?)\{\/block\}/is", array($this, 'parse_stripblock_12'), $template);
         $template = preg_replace("/\<\?(\s{1})/is", "<?php\\1", $template);
         $template = preg_replace("/\<\?\=(.+?)\?\>/is", "<?=\\1;?>", $template);
 
@@ -603,7 +603,7 @@ class Template
 
     private function parse_stripvtags_template1($matches)
     {
-        return $this->stripvTags("\n".'<? include(Template::getInstance()->loadTemplate(\''.$matches[1].'.html\')); ?>'."\r");
+        return $this->stripvTags('<? include(Template::getInstance()->loadTemplate(\''.$matches[1].'.html\')); ?>');
     }
 
     private function parse_stripvtags_css1($matches)
@@ -633,12 +633,12 @@ class Template
 
     private function parse_stripvtags_loop12($matches)
     {
-        return $this->stripvTags("\n".'<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>'."\n");
+        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>');
     }
 
     private function parse_stripvtags_loop123($matches)
     {
-        return $this->stripvTags("\n".'<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>'."\n");
+        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>');
     }
 
     private function parse_transamp_0($matches)
