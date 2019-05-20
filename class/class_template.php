@@ -403,8 +403,8 @@ class Template
         $template = preg_replace_callback("/\{loadjs\s+(.+?)\}/is", array($this, 'parse_stripvtags_js1'), $template);
 
         //Replace if/else script
-        $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'parse_stripvtags_if123'), $template);
-        $template = preg_replace_callback("/\{elseif\s+(.+?)\}/is", array($this, 'parse_stripvtags_elseif123'), $template);
+        $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'parse_stripvtags_if1'), $template);
+        $template = preg_replace_callback("/\{elseif\s+(.+?)\}/is", array($this, 'parse_stripvtags_elseif1'), $template);
         $template = preg_replace("/\{else\}/i", "<?php } else { ?>", $template);
         $template = preg_replace("/\{\/if\}/i", "<?php } ?>", $template);
 
@@ -621,14 +621,14 @@ class Template
         return $this->stripvTags('<? echo '.$matches[1].';?>');
     }
 
-    private function parse_stripvtags_if123($matches)
+    private function parse_stripvtags_if1($matches)
     {
-        return $this->stripvTags($matches[1].'<? if ('.$matches[2].') { ?>'.$matches[3]);
+        return $this->stripvTags('<? if ('.$matches[1].') { ?>');
     }
 
-    private function parse_stripvtags_elseif123($matches)
+    private function parse_stripvtags_elseif1($matches)
     {
-        return $this->stripvTags($matches[1].'<? } elseif ('.$matches[2].') { ?>'.$matches[3]);
+        return $this->stripvTags('<? } elseif ('.$matches[1].') { ?>');
     }
 
     private function parse_stripvtags_loop12($matches)
@@ -679,7 +679,7 @@ class Template
         $s = str_replace('?>', "\n\$$var = $var.<<<EOF\n", $s);
         $s = str_replace('<?', "\nEOF;\n", $s);
         $s = str_replace("\nphp ", "\n", $s);
-        return "\n<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
+        return "<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
     }
 
     private function evalTags($php)
@@ -687,7 +687,7 @@ class Template
         $php = str_replace('\"', '"', $php);
         $i = count($this->replacecode['search']);
         $this->replacecode['search'][$i] = $search = '<!--EVAL_TAG_'.$i.'-->';
-        $this->replacecode['replace'][$i] = "\r".'<? '."\n".$php."\n".'?>';
+        $this->replacecode['replace'][$i] = '<? '."\n".$php."\n".'?>';
         return $search;
     }
 
