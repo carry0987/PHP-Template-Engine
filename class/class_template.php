@@ -379,7 +379,7 @@ class Template
 
         //Filter <!--{}-->
         $template = preg_replace("/\h*\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
-        $template = preg_replace_callback("/\{block\/(\d+?)\}/i", array($this, 'parse_blocktags_1'), $template);
+        //$template = preg_replace_callback("/\{block\/(\d+?)\}/i", array($this, 'parse_blocktags_1'), $template);
 
         //Replace eval function
         $template = preg_replace_callback("/\{eval\}\s*(\<\!\-\-)*(.+?)(\-\-\>)*\s*\{\/eval\}/is", array($this, 'parse_evaltags_2'), $template);
@@ -656,6 +656,7 @@ class Template
         return $this->stripBlock($matches[1], $matches[2]);
     }
 
+/*
     private function blockTags($parameter)
     {
         $bid = intval(trim($parameter));
@@ -665,6 +666,7 @@ class Template
         $this->replacecode['replace'][$i] = '<?php block_display(\''.$bid.'\');?>';
         return $search;
     }
+*/
 
     private function stripBlock($var, $s)
     {
