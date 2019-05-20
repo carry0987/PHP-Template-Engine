@@ -31,7 +31,7 @@ $options = array(
 );
 ```
 ## Functions
-echo function
+#### **`echo`** function
 html
 ```html
 <span>{$value}</span>
@@ -41,7 +41,26 @@ PHP
 <span><?php echo $value; ?></span>
 ```
 
-if function
+#### **`assign variable`** function
+>Note: don't put any php script into **`block`** tag
+html
+```html
+<!--{block test}-->
+<span>html content</span>
+<!--{/block}-->
+```
+PHP
+```php
+<?php
+$test = <<<EOF
+
+<span>html content</span>
+
+EOF;
+?>
+```
+
+#### **`if`** function
 html
 ```html
 <!--{if expr1}-->
@@ -63,7 +82,7 @@ PHP
 <?php } ?>
 ```
 
-loop function (no key)
+#### **`loop`** function (without key)
 html
 ```html
 <!--{loop $array $value}-->
@@ -77,7 +96,7 @@ PHP
 <?php } ?>
 ```
 
-loop function (use key)
+#### **`loop`** function (with key)
 html
 ```html
 <!--{loop $array $key $value}-->
@@ -91,14 +110,14 @@ PHP
 <?php } ?>
 ```
 
-eval function
+#### **`eval`** function
 html
 ```html
 <!--{eval $value = 1+2}-->
-    <span>{$value}</span>
+<span>{$value}</span>
 ```
 PHP
 ```php
 <?php eval $value = 1+2;?>
-    <span><?php echo $value; ?></span>
+<span><?php echo $value; ?></span>
 ```

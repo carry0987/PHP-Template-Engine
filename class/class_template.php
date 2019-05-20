@@ -674,11 +674,11 @@ class Template
         preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
         $constadd = '';
         $constary[1] = array_unique($constary[1]);
-        foreach ($constary[1] as $const) {
-            $constadd = $constadd.'$__'.$const.' = '.$const.';';
+        foreach($constary[1] as $const) {
+            $constadd .= '$__'.$const.' = '.$const.';';
         }
         $s = preg_replace("/<\?=(.+?)\?>/", "{\$__\\1}", $s);
-        $s = str_replace('?>', "\n\$$var = $var.<<<EOF\n", $s);
+        $s = str_replace('?>', "\n\$$var .= <<<EOF\n", $s);
         $s = str_replace('<?', "\nEOF;\n", $s);
         $s = str_replace("\nphp ", "\n", $s);
         return "<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
