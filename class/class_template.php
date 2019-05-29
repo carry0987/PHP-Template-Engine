@@ -681,7 +681,7 @@ class Template
         $s = str_replace('?>', "\n\$$var .= <<<EOF\n", $s);
         $s = str_replace('<?', "\nEOF;\n", $s);
         $s = str_replace("\nphp ", "\n", $s);
-        return "<?\n$constadd\$$var = <<<EOF\n".$s."\nEOF;\n?>";
+        return "<?\n$constadd\$$var = <<<EOF".$s."EOF;\n?>";
     }
 
     private function evalTags($php)
