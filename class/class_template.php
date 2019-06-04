@@ -414,7 +414,7 @@ class Template
         $template = preg_replace("/\{\/loop\}/i", "<?php } ?>", $template);
 
         //Replace constant
-        $template = preg_replace("/\{$const_regexp\}/s", "<?=\\1?>", $template);
+        $template = preg_replace("/\{\h*$const_regexp\h*\}/s", "<?=\\1?>", $template);
         if (!empty($this->replacecode)) {
             $template = str_replace($this->replacecode['search'], $this->replacecode['replace'], $template);
         }
