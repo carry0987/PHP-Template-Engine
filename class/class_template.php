@@ -633,12 +633,12 @@ class Template
 
     private function parse_stripvtags_loop12($matches)
     {
-        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].') { ?>');
+        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach ('.$matches[1].' as '.$matches[2].') { ?>');
     }
 
     private function parse_stripvtags_loop123($matches)
     {
-        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>');
+        return $this->stripvTags('<? if (is_array('.$matches[1].')) foreach ('.$matches[1].' as '.$matches[2].' => '.$matches[3].') { ?>');
     }
 
     private function parse_transamp_0($matches)

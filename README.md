@@ -1,5 +1,5 @@
 # Template-Engine
-Small php template engine
+Small &amp; fast php template engine
 
 ## Thanks
 Template **regex function** &amp; **cache method** with big thanks to **[TXGZ](https://github.com/txgz999)**
@@ -11,25 +11,48 @@ Save to local
 ```php
 //Template setting
 $options = array(
+    'template_dir' => 'template',
+    'css_dir' => 'static/css/', //Set css file's cache
+    'js_dir' => 'static/js/', //Set js file's cache
+    'cache_dir' => 'cache',
     'cache_db' => false
 );
 ```
 Save to database
 ```php
 //Connect to Database
-try {
-    $connectdb = new mysqli('localhost', 'root', 'root', 'template');
-    $connectdb->query('SET CHARACTER SET utf8');
-} catch (Exception $e) {
-    $e->getMessage();
-    exit();
-}
+$connectdb = new mysqli('localhost', 'root', 'root', 'template');
 
 //Template setting
 $options = array(
+    'template_dir' => 'template',
+    'css_dir' => 'static/css/', //Set css file's cache
+    'js_dir' => 'static/js/', //Set js file's cache
+    'cache_dir' => 'cache',
     'cache_db' => $connectdb
 );
 ```
+## Cache CSS &amp; JS File
+#### CSS
+html
+```html
+<link href="{loadcss common.css}" rel="stylesheet" type="text/css">
+```
+Output:
+```html
+<link href="static/css/common.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
+```
+
+#### JS
+html
+```html
+<script src="{loadjs jquery.min.js}" type="text/javascript"></script>
+```
+Output:
+```html
+<script src="static/js/jquery.min.js?v=B22PE8W" type="text/javascript"></script>
+```
+
 ## Functions
 #### **`echo`** function
 html
