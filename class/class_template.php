@@ -68,7 +68,7 @@ class Template
                 if (!file_exists($value)) {
                     $makepath = $this->makePath($value);
                     if ($makepath !== true) {
-                        $this->throwError('Can\'t build template folder', $makepath);
+                        $this->throwError('Couldn\'t build template folder', $makepath);
                     }
                 }
                 $this->options['cache_dir'] = $value;
@@ -109,7 +109,7 @@ class Template
         }
         $max = strlen($seed) - 1;
         for ($i = 0; $i < $length; $i++) {
-            $hash = $hash.$seed{mt_rand(0, $max)};
+            $hash = $hash.$seed[mt_rand(0, $max)];
         }
         return $hash;
     }
