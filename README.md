@@ -1,8 +1,8 @@
 # Template-Engine
 Small &amp; fast php template engine
 
-## Thanks
-Template **regex function** &amp; **cache method** with big thanks to **[TXGZ](https://github.com/txgz999)**
+## Requires
+PHP 7.0 or newer
 
 ## Usage
 Now you can choose saving version of template file to local or database  
@@ -144,3 +144,6 @@ PHP
 <?php eval $value = 1+2;?>
 <span><?php echo $value; ?></span>
 ```
+
+## Thanks
+Template **regex function** &amp; **cache method** with big thanks to **[TXGZ](https://github.com/txgz999)**
