@@ -500,14 +500,19 @@ class Template
         $get_tpl_name = $this->trimTplName($get_tpl_name);
         $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
         $tpl_stmt = $this->options['cache_db']->stmt_init();
+        $tpl_row = array();
         try {
             $tpl_stmt->prepare($tpl_query);
             $tpl_stmt->bind_param('sss', $get_tpl_path, $get_tpl_name, $get_tpl_type);
             $tpl_stmt->execute();
+            $tpl_stmt->store_result();
             $tpl_stmt->bind_result($tpl_md5, $tpl_expire_time, $tpl_verhash);
-            $tpl_result = $tpl_stmt->get_result();
-            if ($tpl_result->num_rows != 0) {
-                $tpl_row = $tpl_result->fetch_assoc();
+            if ($tpl_stmt->num_rows != 0) {
+                while ($tpl_stmt->fetch()) {
+                    $tpl_row['tpl_md5'] = $tpl_md5;
+                    $tpl_row['tpl_expire_time'] = $tpl_expire_time;
+                    $tpl_row['tpl_verhash'] = $tpl_verhash;
+                }
                 return $tpl_row;
             } else {
                 return false;
