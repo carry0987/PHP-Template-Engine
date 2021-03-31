@@ -527,7 +527,7 @@ class Template
                 return false;
             }
         } catch (mysqli_sql_exception $e) {
-            $this->throwDBError($e->getMessage(), $e->getCode());
+            echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
@@ -549,7 +549,7 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            $this->throwDBError($e->getMessage(), $e->getCode());
+            echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
@@ -571,7 +571,7 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            $this->throwDBError($e->getMessage(), $e->getCode());
+            echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
