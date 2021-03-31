@@ -26,7 +26,7 @@ class Template
             'cache_dir' => 'templates'.self::DIR_SEP.'cache'.self::DIR_SEP,
             'auto_update' => false,
             'cache_lifetime' => 0,
-            'cache_db' => false,
+            'cache_db' => false
         );
     }
 
@@ -379,6 +379,11 @@ class Template
 
         //Filter <!--{}-->
         $template = preg_replace("/\h*\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
+
+        //Language
+        $template = preg_replace_callback("/\{lang\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_language_var_1'), $template);
+
+        //Replace block tag
         //$template = preg_replace_callback("/\{block\/(\d+?)\}/i", array($this, 'parse_blocktags_1'), $template);
 
         //Replace eval function
@@ -388,6 +393,9 @@ class Template
         //Replace direct variable output
         $template = preg_replace("/\{\h*(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)\h*\}/s", "<?=\\1?>", $template);
         $template = preg_replace_callback("/\<\?\=\<\?\=$var_regexp\?\>\?\>/s", array($this, 'parse_addquote_1'), $template);
+
+        //Replace $var
+        //$template = preg_replace_callback("/$var_regexp/s", array($this, 'parse_addquote_1'), $template);
 
         //Replace template loading function
         $template = preg_replace_callback("/\{template\s+([a-z0-9_:\/]+)\}/is", array($this, 'parse_stripvtags_template1'), $template);
@@ -464,6 +472,7 @@ class Template
 
     private function dashPath($path)
     {
+        $path = ltrim($path, '/\\');
         $path = rtrim($path, '/\\');
         return str_replace(array('/', '\\', '//', '\\\\'), '-', $path);
     }
@@ -518,9 +527,7 @@ class Template
                 return false;
             }
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>'."\n";
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
-            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
+            $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
@@ -542,9 +549,7 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>'."\n";
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
-            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
+            $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
@@ -566,9 +571,7 @@ class Template
             );
             $tpl_stmt->execute();
         } catch (mysqli_sql_exception $e) {
-            echo '<h1>Service unavailable</h1>'."\n";
-            echo '<h2>Error Info :'.$e->getMessage().'</h2>'."\n";
-            echo '<h3>Error Code :'.$e->getCode().'</h3>'."\n";
+            $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
     }
@@ -586,10 +589,17 @@ class Template
         return true;
     }
 
+    private function parse_language_var_1($matches)
+    {
+        return $this->stripvTags('<? echo Template::langParam('.$matches[1].', '.$matches[2].');?>');
+    }
+
+/*
     private function parse_blocktags_1($matches)
     {
         return $this->blockTags($matches[1]);
     }
+*/
 
     private function parse_evaltags_1($matches)
     {
@@ -608,17 +618,17 @@ class Template
 
     private function parse_stripvtags_template1($matches)
     {
-        return $this->stripvTags('<? include(Template::getInstance()->loadTemplate(\''.$matches[1].'.html\')); ?>');
+        return $this->stripvTags('<? include(Template::getInstance()->loadTemplate(\''.$matches[1].'.html\'));?>');
     }
 
     private function parse_stripvtags_css1($matches)
     {
-        return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\');?>');
     }
 
     private function parse_stripvtags_js1($matches)
     {
-        return $this->stripvTags('<? echo Template::getInstance()->loadJSFile(\''.$matches[1].'\'); ?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadJSFile(\''.$matches[1].'\');?>');
     }
 
     private function parse_stripvtags_echo1($matches)
@@ -661,8 +671,16 @@ class Template
         return $this->stripBlock($matches[1], $matches[2]);
     }
 
+    public static function langParam($value, $param)
+    {
+        foreach ($param as $index => $p) {
+            $value = str_replace('{'.$index.'}', $p, $value);
+        }
+        return $value;
+    }
+
 /*
-    private function blockTags($parameter)
+    private function blocktags($parameter)
     {
         $bid = intval(trim($parameter));
         $this->blocks[] = $bid;
@@ -671,8 +689,8 @@ class Template
         $this->replacecode['replace'][$i] = '<?php block_display(\''.$bid.'\');?>';
         return $search;
     }
-*/
 
+*/
     private function stripBlock($var, $s)
     {
         $s = preg_replace("/<\?=\\\$(.+?)\?>/", "{\$\\1}", $s);
@@ -740,5 +758,14 @@ class Template
     {
         throw new Exception($tplname.' : '.$message);
         exit();
+    }
+
+    //Throw database error excetpion
+    private function throwDBError($message, $code)
+    {
+        $error = '<h1>Service unavailable</h1>'."\n";
+        $error .= '<h2>Error Info :'.$message.'</h2>'."\n";
+        $error .= '<h3>Error Code :'.$code.'</h3>'."\n";
+        return $error;
     }
 }
