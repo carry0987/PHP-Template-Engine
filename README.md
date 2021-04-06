@@ -14,8 +14,9 @@ $options = array(
     'template_dir' => 'template',
     'css_dir' => 'static/css/', //Set css file's cache
     'js_dir' => 'static/js/', //Set js file's cache
-    'cache_dir' => 'cache',
-    'cache_db' => false
+    'auto_update' => true, //Set 'false' to turn off auto update template
+    'cache_lifetime' => 0, //Set cache file's lifetime (minute)
+    'cache_db' => false //Set 'false' to save cache version at local directory
 );
 ```
 Save to database
