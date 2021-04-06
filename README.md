@@ -31,7 +31,7 @@ $options = array(
     'js_dir' => 'static/js/', //Set js file's cache
     'auto_update' => true, //Set 'false' to turn off auto update template
     'cache_lifetime' => 0, //Set cache file's lifetime (minute)
-    'cache_db' => $connectdb //Give connection variable to save cache version into Database
+    'cache_db' => $connectdb //Give connection variable to save cache version into database
 );
 ```
 ## Cache CSS &amp; JS File
