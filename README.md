@@ -29,8 +29,9 @@ $options = array(
     'template_dir' => 'template',
     'css_dir' => 'static/css/', //Set css file's cache
     'js_dir' => 'static/js/', //Set js file's cache
-    'cache_dir' => 'cache',
-    'cache_db' => $connectdb
+    'auto_update' => true, //Set 'false' to turn off auto update template
+    'cache_lifetime' => 0, //Set cache file's lifetime (minute)
+    'cache_db' => $connectdb //Give connection variable to save cache version into Database
 );
 ```
 ## Cache CSS &amp; JS File
