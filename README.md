@@ -68,6 +68,7 @@ PHP
 
 #### **`assign variable`** function
 >Note: don't put any php script into **`block`** tag
+
 html
 ```html
 <!--{block test}-->
