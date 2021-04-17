@@ -674,7 +674,6 @@ class Template
 
         //Get template contents
         $content = file_get_contents($css_tplfile);
-        //$content = preg_replace("/([\n\r]+)\t+/s", "\\1", $content);
         $content = preg_match("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", $content, $matches);
         $content = $this->parse_stripvtags_csstpl($content, $matches, $this->place);
         //Write into cache file
