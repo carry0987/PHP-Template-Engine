@@ -693,7 +693,7 @@ class Template
     {
         $content = false;
         if ($result === 1) {
-            $content = '/* '.$param.' */'."\n".$matches[1]."\n".'/* '.'/'.$param.' */';
+            $content = '/* '.$param.' */'."\n".$matches[1]."\n".'/* END '.$param.' */';
         }
         return $content;
     }
