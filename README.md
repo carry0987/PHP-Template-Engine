@@ -47,7 +47,7 @@ html
 ```html
 <link href="{loadcss common.css index}" rel="stylesheet" type="text/css">
 ```
-Or
+You can also use variable as `specific part`
 ```html
 <!--{eval $current_page = basename($_SERVER['SCRIPT_NAME'], '.php')}-->
 <link href="{loadcss common.css $current_page}" rel="stylesheet" type="text/css">
