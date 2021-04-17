@@ -6,6 +6,7 @@ class Template
     const DIR_SEP = DIRECTORY_SEPARATOR;
     private static $instance;
     private $options = array();
+    private $place = '';
 
     //Get Instance
     public static function getInstance()
@@ -126,6 +127,12 @@ class Template
         return $this->trimPath($this->options['css_dir'].self::DIR_SEP.$file);
     }
 
+    private function getCSSCache($file, $place)
+    {
+        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
+    }
+
     //Get CSS version file path
     private function getCSSVersionFile($file)
     {
@@ -211,9 +218,10 @@ class Template
     }
 
     //Load CSS Template
+    /*
     public function loadCSSTemplate($file, $place)
     {
-        //preg_match('/\/\*\[(.+?)\]\*\/(.*?)\/\*\[\/(.+?)\]\*\//is', subject);
+        preg_match('/\/\*\[(.+?)\]\*\/(.*?)\/\*\[\/(.+?)\]\*\//is', subject);
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
@@ -229,7 +237,7 @@ class Template
         $verhash = $this->cssVersionCheck($file);
         $file = $this->getCSSFile($file);
         return $file.'?v='.$verhash;
-    }
+    }*/
 
     //Get JS file path
     private function trimJSName($file)
@@ -354,6 +362,7 @@ class Template
         return $cachefile;
     }
 
+    /* Check template expiration and md5 */
     private function checkTemplate($file)
     {
         if ($this->options['cache_db'] !== false) {
@@ -427,7 +436,7 @@ class Template
 
         //Replace cssloader
         $template = preg_replace_callback("/\{loadcss\s+(\S+)\}/is", array($this, 'parse_stripvtags_css1'), $template);
-        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_css12'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_csstemplate'), $template);
 
         //Replace jsloader
         $template = preg_replace_callback("/\{loadjs\s+(\S+)\}/is", array($this, 'parse_stripvtags_js1'), $template);
@@ -648,9 +657,45 @@ class Template
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\');?>');
     }
 
-    private function parse_stripvtags_css12($matches)
+    private function parse_stripvtags_csstemplate($matches)
     {
-        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');
+        return $this->loadcsstemplate($matches[1], $matches[2]);
+        /*return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');*/
+    }
+
+    //Parse CSS Template
+    private function loadcsstemplate($file, $place)
+    {
+        $this->place = $place;
+        $css_tplfile = $this->getCSSFile($file);
+        if (!is_readable($css_tplfile)) {
+            $this->throwError('Template file can\'t be found or opened', $css_tplfile);
+        }
+
+        //Get template contents
+        $content = file_get_contents($css_tplfile);
+        //$content = preg_replace("/([\n\r]+)\t+/s", "\\1", $content);
+        $content = preg_replace_callback("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", array($this, 'loadcsstemplate_callback_cssvtags_1'), $content);
+        //Write into cache file
+        $cachefile = $this->getCSSCache($file, $place);
+        $makepath = $this->makePath($cachefile);
+        if ($makepath !== true) {
+            $this->throwError('Can\'t build template folder', $makepath);
+        } else {
+            file_put_contents($cachefile, $content."\n");
+        }
+        return $cachefile;
+    }
+
+    private function loadcsstemplate_callback_cssvtags_1($matches)
+    {
+        return $this->parse_stripvtags_csstpl($this->place, $matches[1]);
+    }
+
+    private function parse_stripvtags_csstpl($param, $content)
+    {
+        $content = '/* '.$param.' */'."\n".$content;
+        return $content;
     }
 
     private function parse_stripvtags_js1($matches)

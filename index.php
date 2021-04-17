@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL | E_STRICT);
+ini_set('display_errors', 1);
 require dirname(__FILE__).'/class/class_template.php';
 
 //Template setting

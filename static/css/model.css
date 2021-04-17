@@ -1,0 +1,21 @@
+@charset "UTF-8";
+
+/*[index]*/
+.header {
+    display: block;
+}
+
+.link {
+    color: blue;
+}
+/*[/index]*/
+
+/*[category]*/
+.header {
+    display: block;
+}
+
+.link {
+    color: blue;
+}
+/*[/category]*/

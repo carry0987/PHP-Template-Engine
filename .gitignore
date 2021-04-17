@@ -1,2 +1,5 @@
 
 .DS_Store
+cache/*.txt
+cache/*.css
+cache/*.php
