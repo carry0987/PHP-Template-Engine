@@ -12,10 +12,10 @@
 
 /*[category]*/
 .header {
-    display: block;
+    display: inline-block;
 }
 
 .link {
-    color: blue;
+    color: red;
 }
 /*[/category]*/

@@ -675,7 +675,8 @@ class Template
         //Get template contents
         $content = file_get_contents($css_tplfile);
         //$content = preg_replace("/([\n\r]+)\t+/s", "\\1", $content);
-        $content = preg_replace_callback("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", array($this, 'loadcsstemplate_callback_cssvtags_1'), $content);
+        $content = preg_match("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", $content, $matches);
+        $content = $this->parse_stripvtags_csstpl($content, $matches, $this->place);
         //Write into cache file
         $cachefile = $this->getCSSCache($file, $place);
         $makepath = $this->makePath($cachefile);
@@ -687,14 +688,12 @@ class Template
         return $cachefile;
     }
 
-    private function loadcsstemplate_callback_cssvtags_1($matches)
+    private function parse_stripvtags_csstpl($result, $matches, $param)
     {
-        return $this->parse_stripvtags_csstpl($this->place, $matches[1]);
-    }
-
-    private function parse_stripvtags_csstpl($param, $content)
-    {
-        $content = '/* '.$param.' */'."\n".$content;
+        $content = false;
+        if ($result === 1) {
+            $content = '/* '.$param.' */'."\n".$matches[1];
+        }
         return $content;
     }
 
