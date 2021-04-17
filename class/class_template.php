@@ -236,6 +236,9 @@ class Template
         }
         $verhash = $this->cssVersionCheck($file);
         $file = $this->getCSSCache($file, $place);
+        if (!file_exists($file)) {
+            $this->parseCSSTemplate($file, $place);
+        }
         return $file.'?v='.$verhash;
     }
 
