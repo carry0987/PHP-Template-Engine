@@ -218,26 +218,26 @@ class Template
     }
 
     //Load CSS Template
-    /*
     public function loadCSSTemplate($file, $place)
     {
-        preg_match('/\/\*\[(.+?)\]\*\/(.*?)\/\*\[\/(.+?)\]\*\//is', subject);
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             if ($css_version === false) {
+                $cache_file = $this->parseCSSTemplate($file, $place);
                 $this->cssSaveVersion($file);
             }
         } else {
             $versionfile = $this->getCSSVersionFile($file);
             if (!file_exists($versionfile)) {
+                $cache_file = $this->parseCSSTemplate($file, $place);
                 $this->cssSaveVersion($file);
             }
         }
         $verhash = $this->cssVersionCheck($file);
-        $file = $this->getCSSFile($file);
+        $file = $this->getCSSCache($file, $place);
         return $file.'?v='.$verhash;
-    }*/
+    }
 
     //Get JS file path
     private function trimJSName($file)
@@ -659,12 +659,11 @@ class Template
 
     private function parse_stripvtags_csstemplate($matches)
     {
-        return $this->loadCSSTemplate($matches[1], $matches[2]);
-        /*return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');*/
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', \''.$matches[2].'\');?>');
     }
 
     //Parse CSS Template
-    private function loadCSSTemplate($file, $place)
+    private function parseCSSTemplate($file, $place)
     {
         $this->place = $place;
         $css_tplfile = $this->getCSSFile($file);
