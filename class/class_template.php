@@ -183,6 +183,7 @@ class Template
             $verhash = $static_data['tpl_verhash'];
             if (md5_file($this->getCSSFile($file)) !== $md5data) {
                 $verhash = $this->cssSaveVersion($file);
+                $this->parseCSSTemplate($file, $this->place);
             }
         } else {
             $versionfile = $this->getCSSVersionFile($file);
@@ -192,6 +193,7 @@ class Template
             $verhash = $versionContent[1];
             if (md5_file($this->getCSSFile($file)) !== $md5data) {
                 $verhash = $this->cssSaveVersion($file);
+                $this->parseCSSTemplate($file, $this->place);
             }
         }
         return $verhash;
@@ -220,6 +222,7 @@ class Template
     //Load CSS Template
     public function loadCSSTemplate($file, $place)
     {
+        $this->place = $place;
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
@@ -668,7 +671,6 @@ class Template
     //Parse CSS Template
     private function parseCSSTemplate($file, $place)
     {
-        $this->place = $place;
         $css_tplfile = $this->getCSSFile($file);
         if (!is_readable($css_tplfile)) {
             $this->throwError('Template file can\'t be found or opened', $css_tplfile);
