@@ -41,7 +41,7 @@ $options = array(
 );
 ```
 ## Cache CSS &amp; JS File
-#### CSS
+#### CSS Cache
 Cache specific part of CSS  
 html
 ```html
@@ -80,7 +80,7 @@ Output:
 <link href="static/css/common.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
 ```
 
-#### JS
+#### JS Cache
 html
 ```html
 <script src="{loadjs jquery.min.js}" type="text/javascript"></script>
