@@ -659,7 +659,7 @@ class Template
 
     private function parse_stripvtags_csstemplate($matches)
     {
-        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', \''.$matches[2].'\');?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', "'.$matches[2].'");?>');
     }
 
     //Parse CSS Template
