@@ -235,11 +235,11 @@ class Template
             }
         }
         $verhash = $this->cssVersionCheck($file);
-        $file = $this->getCSSCache($file, $place);
-        if (!file_exists($file)) {
+        $css_cache_file = $this->getCSSCache($file, $place);
+        if (!file_exists($css_cache_file)) {
             $this->parseCSSTemplate($file, $place);
         }
-        return $file.'?v='.$verhash;
+        return $css_cache_file.'?v='.$verhash;
     }
 
     //Get JS file path
