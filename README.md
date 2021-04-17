@@ -4,6 +4,12 @@ Small &amp; fast php template engine
 ## Requires
 PHP 7.0 or newer
 
+## Features
+- Support pure html as template
+- Support CSS, JS file cache
+- Support CSS model cache
+- Cache lifetime
+
 ## Usage
 Now you can choose saving version of template file to local or database  
 
@@ -36,6 +42,35 @@ $options = array(
 ```
 ## Cache CSS &amp; JS File
 #### CSS
+Cache specific part of CSS  
+html
+```html
+<link href="{loadcss common.css index}" rel="stylesheet" type="text/css">
+```
+Or
+```html
+<!--{eval $current_page = basename($_SERVER['SCRIPT_NAME'], '.php')}-->
+<link href="{loadcss common.css $current_page}" rel="stylesheet" type="text/css">
+```
+
+CSS
+```css
+/*[index]*/
+.header {
+    display: block;
+}
+
+.link {
+    color: blue;
+}
+/*[/index]*/
+```
+Output:
+```html
+<link href="cache/common_index.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
+```
+
+Directly cache CSS file  
 html
 ```html
 <link href="{loadcss common.css}" rel="stylesheet" type="text/css">
