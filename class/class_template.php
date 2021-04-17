@@ -210,6 +210,27 @@ class Template
         return $file.'?v='.$verhash;
     }
 
+    //Load CSS Template
+    public function loadCSSTemplate($file, $place)
+    {
+        //preg_match('/\/\*\[(.+?)\]\*\/(.*?)\/\*\[\/(.+?)\]\*\//is', subject);
+        if ($this->options['cache_db'] !== false) {
+            $css_file = $this->trimCSSName($file);
+            $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
+            if ($css_version === false) {
+                $this->cssSaveVersion($file);
+            }
+        } else {
+            $versionfile = $this->getCSSVersionFile($file);
+            if (!file_exists($versionfile)) {
+                $this->cssSaveVersion($file);
+            }
+        }
+        $verhash = $this->cssVersionCheck($file);
+        $file = $this->getCSSFile($file);
+        return $file.'?v='.$verhash;
+    }
+
     //Get JS file path
     private function trimJSName($file)
     {
@@ -405,10 +426,11 @@ class Template
         $template = preg_replace_callback("/\{echo\s+(.+?)\}/is", array($this, 'parse_stripvtags_echo1'), $template);
 
         //Replace cssloader
-        $template = preg_replace_callback("/\{loadcss\s+(.+?)\}/is", array($this, 'parse_stripvtags_css1'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\}/is", array($this, 'parse_stripvtags_css1'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_css12'), $template);
 
         //Replace jsloader
-        $template = preg_replace_callback("/\{loadjs\s+(.+?)\}/is", array($this, 'parse_stripvtags_js1'), $template);
+        $template = preg_replace_callback("/\{loadjs\s+(\S+)\}/is", array($this, 'parse_stripvtags_js1'), $template);
 
         //Replace if/else script
         $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'parse_stripvtags_if1'), $template);
@@ -624,6 +646,11 @@ class Template
     private function parse_stripvtags_css1($matches)
     {
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\');?>');
+    }
+
+    private function parse_stripvtags_css12($matches)
+    {
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');
     }
 
     private function parse_stripvtags_js1($matches)
