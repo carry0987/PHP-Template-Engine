@@ -691,11 +691,49 @@ class Template
         return $cachefile;
     }
 
+    //Minify CSS
+    private function minifyCSS($content, $rm_comment = true)
+    {
+        //Remove comments
+        if ($rm_comment === true) {
+            $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
+        }
+        //Backup values within single or double quotes
+        preg_match_all('/(\'[^\']*?\'|"[^"]*?")/ims', $content, $hit, PREG_PATTERN_ORDER);
+        for ($i=0; $i < count($hit[1]); $i++) {
+            $content = str_replace($hit[1][$i], '##########'.$i.'##########', $content);
+        }
+        //Remove traling semicolon of selector's last property
+        $content = preg_replace('/;[\s\r\n\t]*?}[\s\r\n\t]*/ims', "}\r\n", $content);
+        //Remove any whitespace between semicolon and property-name
+        $content = preg_replace('/;[\s\r\n\t]*?([\r\n]?[^\s\r\n\t])/ims', ';$1', $content);
+        //Remove any whitespace surrounding property-colon
+        $content = preg_replace('/[\s\r\n\t]*:[\s\r\n\t]*?([^\s\r\n\t])/ims', ':$1', $content);
+        //Remove any whitespace surrounding selector-comma
+        $content = preg_replace('/[\s\r\n\t]*,[\s\r\n\t]*?([^\s\r\n\t])/ims', ',$1', $content);
+        //Remove any whitespace surrounding opening parenthesis
+        $content = preg_replace('/[\s\r\n\t]*{[\s\r\n\t]*?([^\s\r\n\t])/ims', '{$1', $content);
+        //Remove any whitespace between numbers and units
+        $content = preg_replace('/([\d\.]+)[\s\r\n\t]+(px|em|pt|%)/ims', '$1$2', $content);
+        //Shorten zero-values
+        $content = preg_replace('/([^\d\.]0)(px|em|pt|%)/ims', '$1', $content);
+        //Constrain multiple whitespaces
+        $content = preg_replace('/\p{Zs}+/ims', ' ', $content);
+        //Remove newlines
+        $content = str_replace(array("\r\n", "\r", "\n"), '', $content);
+        //Restore backupped values within single or double quotes
+        for ($i=0; $i < count($hit[1]); $i++) {
+            $content = str_replace('##########'.$i.'##########', $hit[1][$i], $content);
+        }
+        return $content;
+    }
+
     private function parse_stripvtags_csstpl($result, $matches, $param)
     {
         $content = false;
         if ($result === 1) {
-            $content = '/* '.$param.' */'."\n".$matches[1].'/* END '.$param.' */';
+            $matches[1] = $this->minifyCSS($matches[1]);
+            $content = '/* '.$param.' */'."\n".$matches[1]."\n".'/* END '.$param.' */';
         }
         return $content;
     }
