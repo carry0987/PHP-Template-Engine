@@ -23,6 +23,7 @@ class Template
         $this->options = array(
             'template_dir' => 'templates'.self::DIR_SEP,
             'css_dir' => 'css'.self::DIR_SEP,
+            'css_cache_dir' => 'cache'.self::DIR_SEP.'css',
             'js_dir' => 'js'.self::DIR_SEP,
             'cache_dir' => 'templates'.self::DIR_SEP.'cache'.self::DIR_SEP,
             'auto_update' => false,
@@ -54,6 +55,16 @@ class Template
                 $value = $this->trimPath($value);
                 if (!file_exists($value)) {
                     $this->throwError('Couldn\'t found the specified css folder', $value);
+                }
+                $this->options['css_dir'] = $value;
+                break;
+            case 'css_cache_dir':
+                $value = $this->trimPath($value);
+                if (!file_exists($value)) {
+                    $makepath = $this->makePath($value);
+                    if ($makepath !== true) {
+                        $this->throwError('Couldn\'t build css cache folder', $makepath);
+                    }
                 }
                 $this->options['css_dir'] = $value;
                 break;
@@ -130,7 +141,7 @@ class Template
     private function getCSSCache($file, $place)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
-        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
+        return $this->trimPath($this->options['css_cache_dir'].self::DIR_SEP.$file);
     }
 
     //Get CSS version file path
