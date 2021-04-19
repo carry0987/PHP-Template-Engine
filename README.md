@@ -8,6 +8,7 @@ PHP 7.0 or newer
 - Support pure html as template
 - Support CSS, JS file cache
 - Support CSS model cache
+- Auto minify CSS cache
 - Cache lifetime
 
 ## Usage
