@@ -692,12 +692,10 @@ class Template
     }
 
     //Minify CSS
-    private function minifyCSS($content, $rm_comment = true)
+    private function minifyCSS($content)
     {
         //Remove comments
-        if ($rm_comment === true) {
-            $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
-        }
+        $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
         //Backup values within single or double quotes
         preg_match_all('/(\'[^\']*?\'|"[^"]*?")/ims', $content, $hit, PREG_PATTERN_ORDER);
         for ($i=0; $i < count($hit[1]); $i++) {
