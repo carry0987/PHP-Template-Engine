@@ -130,7 +130,7 @@ class Template
     private function getCSSCache($file, $place)
     {
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
-        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
+        return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
     }
 
     //Get CSS version file path
