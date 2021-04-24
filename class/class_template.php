@@ -701,7 +701,7 @@ class Template
         for ($i=0; $i < count($hit[1]); $i++) {
             $content = str_replace($hit[1][$i], '##########'.$i.'##########', $content);
         }
-        //Remove traling semicolon of selector's last property
+        //Remove trailing semicolon of selector's last property
         $content = preg_replace('/;[\s\r\n\t]*?}[\s\r\n\t]*/ims', "}\r\n", $content);
         //Remove any whitespace between semicolon and property-name
         $content = preg_replace('/;[\s\r\n\t]*?([\r\n]?[^\s\r\n\t])/ims', ';$1', $content);
@@ -713,8 +713,6 @@ class Template
         $content = preg_replace('/[\s\r\n\t]*{[\s\r\n\t]*?([^\s\r\n\t])/ims', '{$1', $content);
         //Remove any whitespace between numbers and units
         $content = preg_replace('/([\d\.]+)[\s\r\n\t]+(px|em|pt|%)/ims', '$1$2', $content);
-        //Shorten zero-values
-        $content = preg_replace('/([^\d\.]0)(px|em|pt|%)/ims', '$1', $content);
         //Constrain multiple whitespaces
         $content = preg_replace('/\p{Zs}+/ims', ' ', $content);
         //Remove newlines
