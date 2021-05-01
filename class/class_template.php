@@ -619,7 +619,7 @@ class Template
         $tmp = '';
         foreach ($dirs as $dir) {
             $tmp = $tmp.$dir.self::DIR_SEP;
-            if (!file_exists($tmp) && !mkdir($tmp, 0777)) {
+            if (!file_exists($tmp) && !mkdir($tmp, 0755)) {
                 return $tmp;
             }
         }
