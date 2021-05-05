@@ -6,7 +6,9 @@
     <title>Template</title>
     <link href="./favicon.ico" rel="shortcut icon" />
     <link href="{loadcss common.css}" rel="stylesheet" type="text/css">
+    <!--{eval $css_array = ['index','test'];}-->
     <link href="{loadcss model.css index}" rel="stylesheet" type="text/css">
+    <link href="{loadcss model.css $css_array}" rel="stylesheet" type="text/css">
     <script src="{loadjs jquery.min.js}" type="text/javascript"></script>
 </head>
 

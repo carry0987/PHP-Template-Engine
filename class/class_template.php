@@ -129,6 +129,7 @@ class Template
 
     private function getCSSCache($file, $place)
     {
+        $place = (is_array($place)) ? 'MULTIPLE' : $place;
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
     }
@@ -222,6 +223,9 @@ class Template
     //Load CSS Template
     public function loadCSSTemplate($file, $place)
     {
+        if (is_array($place)) {
+            $place = (count($place) > 1) ? $place : $place[0];
+        }
         $this->place = $place;
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
@@ -409,6 +413,7 @@ class Template
 
         //Get template contents
         $template = file_get_contents($tplfile);
+        $var_simple_regexp = "(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)";
         $var_regexp = "((\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\-\>)?[a-zA-Z0-9_\x7f-\xff]*)(\[[a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+\])*)";
         $const_regexp = "([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)";
         $template = preg_replace("/([\n\r]+)\t+/s", "\\1", $template);
@@ -442,7 +447,8 @@ class Template
 
         //Replace cssloader
         $template = preg_replace_callback("/\{loadcss\s+(\S+)\}/is", array($this, 'parse_stripvtags_css1'), $template);
-        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+(\S+)\}/is", array($this, 'parse_stripvtags_csstemplate'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+([a-z0-9_]+)\}/is", array($this, 'parse_stripvtags_csstpl_1'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+$var_simple_regexp\}/is", array($this, 'parse_stripvtags_csstpl_2'), $template);
 
         //Replace jsloader
         $template = preg_replace_callback("/\{loadjs\s+(\S+)\}/is", array($this, 'parse_stripvtags_js1'), $template);
@@ -663,9 +669,14 @@ class Template
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\');?>');
     }
 
-    private function parse_stripvtags_csstemplate($matches)
+    private function parse_stripvtags_csstpl_1($matches)
     {
-        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', "'.$matches[2].'");?>');
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', \''.$matches[2].'\');?>');
+    }
+
+    private function parse_stripvtags_csstpl_2($matches)
+    {
+        return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');
     }
 
     //Parse CSS Template
@@ -678,8 +689,17 @@ class Template
 
         //Get template contents
         $content = file_get_contents($css_tplfile);
-        $content = preg_match("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", $content, $matches);
-        $content = $this->parse_stripvtags_csstpl($content, $matches, $this->place);
+        if (is_array($place)) {
+            $place_array = array();
+            foreach ($place as $value) {
+                $contents = preg_match("/\/\*\[$value\]\*\/\s(.*?)\/\*\[\/$value\]\*\//is", $content, $matches);
+                $place_array[$value] = $this->parse_csstpl($contents, $matches, $value);
+            }
+            $content = implode("\n", $place_array);
+        } else {
+            $content = preg_match("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", $content, $matches);
+            $content = $this->parse_csstpl($content, $matches, $place);
+        }
         //Write into cache file
         $cachefile = $this->getCSSCache($file, $place);
         $makepath = $this->makePath($cachefile);
@@ -724,7 +744,7 @@ class Template
         return $content;
     }
 
-    private function parse_stripvtags_csstpl($result, $matches, $param)
+    private function parse_csstpl($result, $matches, $param)
     {
         $content = false;
         if ($result === 1) {

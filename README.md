@@ -43,15 +43,15 @@ $options = array(
 ```
 ## Cache CSS &amp; JS File
 #### CSS Cache
-Cache specific part of CSS  
+**Cache specific part of CSS**  
 html
 ```html
 <link href="{loadcss common.css index}" rel="stylesheet" type="text/css">
 ```
-You can also use variable as `specific part`
+You can use variable as `specific part`
 ```html
-<!--{eval $current_page = basename($_SERVER['SCRIPT_NAME'], '.php')}-->
-<link href="{loadcss common.css $current_page}" rel="stylesheet" type="text/css">
+<!--{eval $current_page = 'index'}-->
+<link href="{loadcss model.css $current_page}" rel="stylesheet" type="text/css">
 ```
 
 CSS
@@ -67,11 +67,60 @@ CSS
 /*[/index]*/
 ```
 Output:
+HTML
 ```html
-<link href="cache/common_index.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
+<link href="cache/model_index.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
+```
+`cache/model_index.css`
+```css
+/* index */
+.header{display:block}.link{color:blue}
+/* END index */
 ```
 
-Directly cache CSS file  
+Also, with `array`
+```html
+<!--{eval $current_page = array('index','test')}-->
+<link href="{loadcss model.css $current_page}" rel="stylesheet" type="text/css">
+```
+CSS
+```css
+/*[index]*/
+.header {
+    display: block;
+}
+
+.link {
+    color: blue;
+}
+/*[/index]*/
+
+/*[test]*/
+.header {
+    display: inline-block;
+}
+
+.link {
+    color: red;
+}
+/*[/test]*/
+```
+Output:
+HTML
+```html
+<link href="cache/model_MULTIPLE.css?v=Ad0Dwf8" rel="stylesheet" type="text/css">
+```
+`cache/model_MULTIPLE.css`
+```css
+/* index */
+.header{display:block}.link{color:blue}
+/* END index */
+/* test */
+.header{display:inline-block}.link{color:red}
+/* END test */
+```
+
+**Directly cache CSS file**  
 html
 ```html
 <link href="{loadcss common.css}" rel="stylesheet" type="text/css">
