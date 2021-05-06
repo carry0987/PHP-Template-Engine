@@ -622,6 +622,9 @@ class Template
     private function makePath($path)
     {
         $dirs = explode(self::DIR_SEP, dirname($this->trimPath($path)));
+        if (!is_writeable($dirs[0])) {
+            return false;
+        }
         $tmp = '';
         foreach ($dirs as $dir) {
             $tmp = $tmp.$dir.self::DIR_SEP;
