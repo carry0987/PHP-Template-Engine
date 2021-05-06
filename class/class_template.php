@@ -129,7 +129,7 @@ class Template
 
     private function getCSSCache($file, $place)
     {
-        $place = (is_array($place)) ? 'MULTIPLE' : $place;
+        $place = (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
     }
