@@ -447,7 +447,7 @@ class Template
 
         //Replace cssloader
         $template = preg_replace_callback("/\{loadcss\s+(\S+)\}/is", array($this, 'parse_stripvtags_css1'), $template);
-        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+([a-z0-9_]+)\}/is", array($this, 'parse_stripvtags_csstpl_1'), $template);
+        $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+([a-z0-9_-]+)\}/is", array($this, 'parse_stripvtags_csstpl_1'), $template);
         $template = preg_replace_callback("/\{loadcss\s+(\S+)\s+$var_simple_regexp\}/is", array($this, 'parse_stripvtags_csstpl_2'), $template);
 
         //Replace jsloader
