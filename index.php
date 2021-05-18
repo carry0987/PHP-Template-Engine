@@ -15,6 +15,7 @@ $options = array(
 
 $template = Template::getInstance();
 $template->setOptions($options);
+$template->compressHTML(false);
 
 $array = array('testa' => 'a', 'testb' => 'b');
 //Include template file

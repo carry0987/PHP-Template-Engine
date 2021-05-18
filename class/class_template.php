@@ -7,6 +7,7 @@ class Template
     private static $instance;
     private $options = array();
     private $place = '';
+    private $compress_html = false;
 
     //Get Instance
     public static function getInstance()
@@ -96,6 +97,11 @@ class Template
     public function __set($name, $value)
     {
         $this->setTemplate($name, $value);
+    }
+
+    public function compressHTML($value)
+    {
+        $this->compress_html = $value;
     }
 
     private function generateRandom($length, $numeric = 0)
@@ -483,6 +489,11 @@ class Template
         //Protect cache file
         $template = '<?php if (!class_exists(\'Template\')) die(\'Access Denied\');?>'."\r\n".$template;
 
+        //Minify HTML
+        if ($this->compress_html === true) {
+            $template = $this->minifyHTML($template);
+        }
+
         //Write into cache file
         $cachefile = $this->getTplCache($file);
         $makepath = $this->makePath($cachefile);
@@ -633,6 +644,19 @@ class Template
             }
         }
         return true;
+    }
+
+    private function minifyHTML($html)
+    {
+        $search = array(
+            '/\>[^\S ]+/s',     // Strip whitespaces after tags, except space
+            '/[^\S ]+\</s',     // Strip whitespaces before tags, except space
+            '/(\s)+/s',         // Shorten multiple whitespace sequences
+            '/<!--(.|\s)*?-->/' // Remove HTML comments
+        );
+        $replace = array('>', '<', '\\1', '');
+        $html = preg_replace($search, $replace, $html);
+        return $html;
     }
 
     private function parse_language_var_1($matches)
