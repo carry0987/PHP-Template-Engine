@@ -325,18 +325,15 @@ class Template
             $static_data = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
-            if (md5_file($this->getJSFile($file)) !== $md5data) {
-                $verhash = $this->jsSaveVersion($file);
-            }
         } else {
             $versionfile = $this->getJSVersionFile($file);
             //Get file contents
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
             $verhash = $versionContent[1];
-            if (md5_file($this->getJSFile($file)) !== $md5data) {
-                $verhash = $this->jsSaveVersion($file);
-            }
+        }
+        if (md5_file($this->getJSFile($file)) !== $md5data) {
+            $verhash = $this->jsSaveVersion($file);
         }
         return $verhash;
     }
@@ -347,17 +344,14 @@ class Template
         if ($this->options['cache_db'] !== false) {
             $js_file = $this->trimJSName($file);
             $js_version = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
-            if ($js_version === false) {
-                $this->jsSaveVersion($file);
-            }
-            $verhash = $this->jsVersionCheck($file);
         } else {
             $versionfile = $this->getJSVersionFile($file);
-            if (!file_exists($versionfile)) {
-                $this->jsSaveVersion($file);
-            }
-            $verhash = $this->jsVersionCheck($file);
+            $js_version = (!file_exists($versionfile)) ? false : true;
         }
+        if ($js_version === false) {
+            $this->jsSaveVersion($file);
+        }
+        $verhash = $this->jsVersionCheck($file);
         $file = $this->getJSFile($file);
         return $file.'?v='.$verhash;
     }
