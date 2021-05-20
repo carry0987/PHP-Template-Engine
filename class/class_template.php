@@ -146,16 +146,14 @@ class Template
     }
 
     //Get CSS version file path
-    private function getCSSVersionFile($file, $place = false)
+    private function getCSSVersionFile($file)
     {
-        $place = (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
-        $place = ($place !== false) ? '_'.$place : '';
-        $file = preg_replace('/\.[a-z0-9\-_]+$/i', $place.'.cssversion.txt', $file);
+        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store CSS version value
-    private function cssSaveVersion($file, $place = false)
+    private function cssSaveVersion($file)
     {
         //Get CSS file
         $css_file = $this->getCSSFile($file);
@@ -177,7 +175,7 @@ class Template
         } else {
             $versionContent = $md5data."\r\n".$verhash;
             //Write version file
-            $versionfile = $this->getCSSVersionFile($file, $place);
+            $versionfile = $this->getCSSVersionFile($file);
             $makepath = $this->makePath($versionfile);
             if ($makepath !== true) {
                 $this->throwError('Couldn\'t build CSS version folder', $makepath);
@@ -198,7 +196,7 @@ class Template
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
         } else {
-            $versionfile = $this->getCSSVersionFile($file, $place);
+            $versionfile = $this->getCSSVersionFile($file);
             //Get file contents
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
@@ -206,7 +204,7 @@ class Template
         }
         if (md5_file($this->getCSSFile($file)) !== $md5data) {
             $result['update'] = true;
-            $verhash = $this->cssSaveVersion($file, $place);
+            $verhash = $this->cssSaveVersion($file);
         }
         $result['verhash'] = $verhash;
         return $result;
@@ -251,13 +249,13 @@ class Template
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
         } else {
-            $versionfile = $this->getCSSVersionFile($file, $place);
+            $versionfile = $this->getCSSVersionFile($file);
             $css_version = (!file_exists($versionfile)) ? false : true;
         }
         if ($css_version === false) {
-            $this->cssSaveVersion($file, $place);
+            $this->cssSaveVersion($file);
         }
-        $css_version_check = $this->cssVersionCheck($file, $place);
+        $css_version_check = $this->cssVersionCheck($file);
         $verhash = $css_version_check['verhash'];
         $css_cache_file = $this->getCSSCache($file, $place);
         if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
