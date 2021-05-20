@@ -7,7 +7,7 @@ class Template
     private static $instance;
     private $options = array();
     private $place = '';
-    private $compress_html = false;
+    private $compress = array('html' => false, 'css' => false);
 
     //Get Instance
     public static function getInstance()
@@ -101,7 +101,12 @@ class Template
 
     public function compressHTML($value)
     {
-        $this->compress_html = $value;
+        $this->compress['html'] = $value;
+    }
+
+    public function compressCSS($value)
+    {
+        $this->compress['css'] = $value;
     }
 
     private function generateRandom($length, $numeric = 0)
@@ -141,14 +146,16 @@ class Template
     }
 
     //Get CSS version file path
-    private function getCSSVersionFile($file)
+    private function getCSSVersionFile($file, $place = false)
     {
-        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
+        $place = (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
+        $place = ($place !== false) ? '_'.$place : '';
+        $file = preg_replace('/\.[a-z0-9\-_]+$/i', $place.'.cssversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
     //Store CSS version value
-    private function cssSaveVersion($file)
+    private function cssSaveVersion($file, $place = false)
     {
         //Get CSS file
         $css_file = $this->getCSSFile($file);
@@ -170,7 +177,7 @@ class Template
         } else {
             $versionContent = $md5data."\r\n".$verhash;
             //Write version file
-            $versionfile = $this->getCSSVersionFile($file);
+            $versionfile = $this->getCSSVersionFile($file, $place);
             $makepath = $this->makePath($versionfile);
             if ($makepath !== true) {
                 $this->throwError('Couldn\'t build CSS version folder', $makepath);
@@ -181,48 +188,55 @@ class Template
     }
 
     //Check CSS file's change
-    private function cssVersionCheck($file)
+    private function cssVersionCheck($file, $place = false)
     {
+        $result = array();
+        $result['update'] = false;
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $static_data = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
-            if (md5_file($this->getCSSFile($file)) !== $md5data) {
-                $verhash = $this->cssSaveVersion($file);
-                $this->parseCSSTemplate($file, $this->place);
-            }
         } else {
-            $versionfile = $this->getCSSVersionFile($file);
+            $versionfile = $this->getCSSVersionFile($file, $place);
             //Get file contents
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
             $verhash = $versionContent[1];
-            if (md5_file($this->getCSSFile($file)) !== $md5data) {
-                $verhash = $this->cssSaveVersion($file);
-                $this->parseCSSTemplate($file, $this->place);
-            }
         }
-        return $verhash;
+        if (md5_file($this->getCSSFile($file)) !== $md5data) {
+            $result['update'] = true;
+            $verhash = $this->cssSaveVersion($file, $place);
+        }
+        $result['verhash'] = $verhash;
+        return $result;
     }
 
     //Load CSS files
     public function loadCSSFile($file)
     {
+        $place = 'minified';
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
-            if ($css_version === false) {
-                $this->cssSaveVersion($file);
-            }
         } else {
             $versionfile = $this->getCSSVersionFile($file);
-            if (!file_exists($versionfile)) {
-                $this->cssSaveVersion($file);
-            }
+            $css_version = (!file_exists($versionfile)) ? false : true;
         }
-        $verhash = $this->cssVersionCheck($file);
-        $file = $this->getCSSFile($file);
+        if ($css_version === false) {
+            $this->cssSaveVersion($file);
+        }
+        $css_version_check = $this->cssVersionCheck($file);
+        $verhash = $css_version_check['verhash'];
+        if ($this->compress['css'] === true) {
+            $css_cache_file = $this->getCSSCache($file, $place);
+            if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
+                $this->parseCSSFile($file, $place);
+            }
+            $file = $css_cache_file;
+        } else {
+            $file = $this->getCSSFile($file);
+        }
         return $file.'?v='.$verhash;
     }
 
@@ -236,20 +250,17 @@ class Template
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
-            if ($css_version === false) {
-                $cache_file = $this->parseCSSTemplate($file, $place);
-                $this->cssSaveVersion($file);
-            }
         } else {
-            $versionfile = $this->getCSSVersionFile($file);
-            if (!file_exists($versionfile)) {
-                $cache_file = $this->parseCSSTemplate($file, $place);
-                $this->cssSaveVersion($file);
-            }
+            $versionfile = $this->getCSSVersionFile($file, $place);
+            $css_version = (!file_exists($versionfile)) ? false : true;
         }
-        $verhash = $this->cssVersionCheck($file);
+        if ($css_version === false) {
+            $this->cssSaveVersion($file, $place);
+        }
+        $css_version_check = $this->cssVersionCheck($file, $place);
+        $verhash = $css_version_check['verhash'];
         $css_cache_file = $this->getCSSCache($file, $place);
-        if (!file_exists($css_cache_file)) {
+        if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
             $this->parseCSSTemplate($file, $place);
         }
         return $css_cache_file.'?v='.$verhash;
@@ -490,7 +501,7 @@ class Template
         $template = '<?php if (!class_exists(\'Template\')) die(\'Access Denied\');?>'."\r\n".$template;
 
         //Minify HTML
-        if ($this->compress_html === true) {
+        if ($this->compress['html'] === true) {
             $template = $this->minifyHTML($template);
         }
 
@@ -649,11 +660,17 @@ class Template
     private function minifyHTML($html)
     {
         $search = array(
+            '/\>[^\S ]+/s',
+            '/[^\S ]+\</s',
+            '/(\s)+/s'
+        );
+        /*
+        $search = array(
             '/\>[^\S ]+/s',     // Strip whitespaces after tags, except space
             '/[^\S ]+\</s',     // Strip whitespaces before tags, except space
             '/(\s)+/s',         // Shorten multiple whitespace sequences
             '/<!--(.|\s)*?-->/' // Remove HTML comments
-        );
+        );*/
         $replace = array('>', '<', '\\1', '');
         $html = preg_replace($search, $replace, $html);
         return $html;
@@ -706,6 +723,27 @@ class Template
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');
     }
 
+    //Parse CSS File
+    private function parseCSSFile($file, $place)
+    {
+        $css_tplfile = $this->getCSSFile($file);
+        if (!is_readable($css_tplfile)) {
+            $this->throwError('CSS file can\'t be found or opened', $css_tplfile);
+        }
+        //Get template contents
+        $content = file_get_contents($css_tplfile);
+        $content = $this->minifyCSS($content);
+        //Write into cache file
+        $cachefile = $this->getCSSCache($file, $place);
+        $makepath = $this->makePath($cachefile);
+        if ($makepath !== true) {
+            $this->throwError('Can\'t build template folder', $makepath);
+        } else {
+            file_put_contents($cachefile, $content."\n");
+        }
+        return $cachefile;
+    }
+
     //Parse CSS Template
     private function parseCSSTemplate($file, $place)
     {
@@ -713,7 +751,6 @@ class Template
         if (!is_readable($css_tplfile)) {
             $this->throwError('Template file can\'t be found or opened', $css_tplfile);
         }
-
         //Get template contents
         $content = file_get_contents($css_tplfile);
         if (is_array($place)) {
