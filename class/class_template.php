@@ -226,7 +226,7 @@ class Template
         }
         $css_version_check = $this->cssVersionCheck($file);
         $verhash = $css_version_check['verhash'];
-        if ($this->compress['css'] === true) {
+        if ($this->compress['css'] === true && strpos($file, '.min.css') === false) {
             $css_cache_file = $this->getCSSCache($file, $place);
             if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
                 $this->parseCSSFile($file, $place);
