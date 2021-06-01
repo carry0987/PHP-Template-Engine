@@ -864,7 +864,7 @@ class Template
     }
 
 /*
-    private function blocktags($parameter)
+    private function blockTags($parameter)
     {
         $bid = intval(trim($parameter));
         $this->blocks[] = $bid;
