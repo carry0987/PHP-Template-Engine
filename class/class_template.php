@@ -7,7 +7,7 @@ class Template
     private static $instance;
     private $options = array();
     private $place = '';
-    private $compress = array('html' => false, 'css' => false);
+    private $compress = array('html' => false, 'css' => true);
 
     //Get Instance
     public static function getInstance()
