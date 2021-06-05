@@ -803,8 +803,11 @@ class Template
     {
         $content = false;
         if ($result === 1) {
-            $matches[1] = $this->minifyCSS($matches[1]);
-            $content = '/* '.$param.' */'."\n".$matches[1]."\n".'/* END '.$param.' */';
+            $content = '/* '.$param.' */'."\n".$matches[1]."\r".'/* END '.$param.' */';
+            if ($this->compress['css'] === true) {
+                $matches[1] = $this->minifyCSS($matches[1]);
+                $content = '/* '.$param.' */'."\n".$matches[1]."\n".'/* END '.$param.' */';
+            }
         }
         return $content;
     }
