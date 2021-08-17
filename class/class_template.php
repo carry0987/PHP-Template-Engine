@@ -773,7 +773,7 @@ class Template
         $content = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $content);
         //Backup values within single or double quotes
         preg_match_all('/(\'[^\']*?\'|"[^"]*?")/ims', $content, $hit, PREG_PATTERN_ORDER);
-        for ($i=0; $i < count($hit[1]); $i++) {
+        for ($i = 0; $i < count($hit[1]); $i++) {
             $content = str_replace($hit[1][$i], '##########'.$i.'##########', $content);
         }
         //Remove trailing semicolon of selector's last property
@@ -793,7 +793,7 @@ class Template
         //Remove newlines
         $content = str_replace(array("\r\n", "\r", "\n"), '', $content);
         //Restore backupped values within single or double quotes
-        for ($i=0; $i < count($hit[1]); $i++) {
+        for ($i = 0; $i < count($hit[1]); $i++) {
             $content = str_replace('##########'.$i.'##########', $hit[1][$i], $content);
         }
         return $content;
@@ -883,7 +883,7 @@ class Template
         preg_match_all("/<\?=(.+?)\?>/", $s, $constary);
         $constadd = '';
         $constary[1] = array_unique($constary[1]);
-        foreach($constary[1] as $const) {
+        foreach ($constary[1] as $const) {
             $constadd .= '$__'.$const.' = '.$const.';';
         }
         $s = preg_replace("/<\?=(.+?)\?>/", "{\$__\\1}", $s);
