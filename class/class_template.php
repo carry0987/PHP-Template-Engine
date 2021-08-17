@@ -530,7 +530,7 @@ class Template
     {
         $path = ltrim($path, '/\\');
         $path = rtrim($path, '/\\');
-        return str_replace(array('/', '\\', '//', '\\\\'), '-', $path);
+        return str_replace(array('/', '\\', '//', '\\\\'), '::', $path);
     }
 
     private function trimTplName($file)
