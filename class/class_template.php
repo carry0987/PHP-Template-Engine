@@ -942,7 +942,7 @@ class Template
     //Throw error excetpion
     private function throwError($message, $tplname)
     {
-        throw new Exception($tplname.' : '.$message);
+        throw new \Exception($tplname.' : '.$message);
         exit();
     }
 
