@@ -207,7 +207,7 @@ class Template
             $result['update'] = true;
         }
         if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
-            $result['update'] = true;
+            $result['update'] = (md5_file($this->getCSSFile($file)) !== $md5data) ? true : false;
         }
         $result['verhash'] = ($result['update'] === true) ? $this->cssSaveVersion($file) : $verhash;
         return $result;
@@ -338,7 +338,7 @@ class Template
             $result['update'] = true;
         }
         if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
-            $result['update'] = true;
+            $result['update'] = (md5_file($this->getJSFile($file)) !== $md5data) ? true : false;
         }
         $result['verhash'] = ($result['update'] === true) ? $this->jsSaveVersion($file) : $verhash;
         return $result;
@@ -407,11 +407,11 @@ class Template
             $expire_time = $versionContent[1];
         }
         if ($check_tpl === false) {
-            if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
+            if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) !== $md5data) {
                 $this->parseTemplate($file);
             }
             if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
-                $this->parseTemplate($file);
+                if (md5_file($this->getTplFile($file)) !== $md5data) $this->parseTemplate($file);
             }
         }
     }
