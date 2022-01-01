@@ -195,6 +195,7 @@ class Template
             $static_data = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
+            $expire_time = $static_data['tpl_expire_time'];
         } else {
             $versionfile = $this->getCSSVersionFile($file);
             //Get file contents
@@ -326,6 +327,7 @@ class Template
             $static_data = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
+            $expire_time = $static_data['tpl_expire_time'];
         } else {
             $versionfile = $this->getJSVersionFile($file);
             //Get file contents
