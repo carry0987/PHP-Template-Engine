@@ -165,14 +165,15 @@ class Template
         //Random length random()
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
+        $expire_time = time();
         if ($this->options['cache_db'] !== false) {
             if ($this->getVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css') !== false) {
-                $this->updateVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+                $this->updateVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, $expire_time, $verhash);
             } else {
-                $this->createVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, '0', $verhash);
+                $this->createVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, $expire_time, $verhash);
             }
         } else {
-            $versionContent = $md5data."\r\n".$verhash;
+            $versionContent = $md5data."\r\n".$verhash."\r\n".$expire_time;
             //Write version file
             $versionfile = $this->getCSSVersionFile($file);
             $makepath = $this->makePath($versionfile);
@@ -200,12 +201,15 @@ class Template
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
             $verhash = $versionContent[1];
+            $expire_time = $versionContent[2];
         }
-        if (md5_file($this->getCSSFile($file)) !== $md5data) {
+        if ($this->options['auto_update'] === true && md5_file($this->getCSSFile($file)) !== $md5data) {
             $result['update'] = true;
-            $verhash = $this->cssSaveVersion($file);
         }
-        $result['verhash'] = $verhash;
+        if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
+            $result['update'] = true;
+        }
+        $result['verhash'] = ($result['update'] === true) ? $this->cssSaveVersion($file) : $verhash;
         return $result;
     }
 
@@ -220,11 +224,8 @@ class Template
             $versionfile = $this->getCSSVersionFile($file);
             $css_version = (!file_exists($versionfile)) ? false : true;
         }
-        if ($css_version === false) {
-            $this->cssSaveVersion($file);
-        }
+        if ($css_version === false) $this->cssSaveVersion($file);
         $css_version_check = $this->cssVersionCheck($file);
-        $verhash = $css_version_check['verhash'];
         if ($this->compress['css'] === true && strpos($file, '.min.css') === false) {
             $css_cache_file = $this->getCSSCache($file, $place);
             if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
@@ -234,7 +235,7 @@ class Template
         } else {
             $file = $this->getCSSFile($file);
         }
-        return $file.'?v='.$verhash;
+        return $file.'?v='.$css_version_check['verhash'];
     }
 
     //Load CSS Template
@@ -295,14 +296,15 @@ class Template
         //Random length random()
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
+        $expire_time = time();
         if ($this->options['cache_db'] !== false) {
             if ($this->getVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js') !== false) {
-                $this->updateVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, '0', $verhash);
+                $this->updateVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, $expire_time, $verhash);
             } else {
-                $this->createVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, '0', $verhash);
+                $this->createVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, $expire_time, $verhash);
             }
         } else {
-            $versionContent = $md5data."\r\n".$verhash;
+            $versionContent = $md5data."\r\n".$verhash."\r\n".$expire_time;
             //Write version file
             $versionfile = $this->getJSVersionFile($file);
             $makepath = $this->makePath($versionfile);
@@ -317,6 +319,8 @@ class Template
     //Check JS file's change
     private function jsVersionCheck($file)
     {
+        $result = array();
+        $result['update'] = false;
         if ($this->options['cache_db'] !== false) {
             $js_file = $this->trimJSName($file);
             $static_data = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
@@ -328,11 +332,16 @@ class Template
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
             $verhash = $versionContent[1];
+            $expire_time = $versionContent[2];
         }
-        if (md5_file($this->getJSFile($file)) !== $md5data) {
-            $verhash = $this->jsSaveVersion($file);
+        if ($this->options['auto_update'] === true && md5_file($this->getJSFile($file)) !== $md5data) {
+            $result['update'] = true;
         }
-        return $verhash;
+        if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
+            $result['update'] = true;
+        }
+        $result['verhash'] = ($result['update'] === true) ? $this->jsSaveVersion($file) : $verhash;
+        return $result;
     }
 
     //Load JS files
@@ -345,12 +354,10 @@ class Template
             $versionfile = $this->getJSVersionFile($file);
             $js_version = (!file_exists($versionfile)) ? false : true;
         }
-        if ($js_version === false) {
-            $this->jsSaveVersion($file);
-        }
-        $verhash = $this->jsVersionCheck($file);
+        if ($js_version === false) $this->jsSaveVersion($file);
+        $js_version_check = $this->jsVersionCheck($file);
         $file = $this->getJSFile($file);
-        return $file.'?v='.$verhash;
+        return $file.'?v='.$js_version_check['verhash'];
     }
 
     /* Template file cache */
@@ -383,29 +390,27 @@ class Template
     /* Check template expiration and md5 */
     private function checkTemplate($file)
     {
+        $check_tpl = false;
         if ($this->options['cache_db'] !== false) {
             $versionContent = $this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html');
             if ($versionContent !== false) {
                 $md5data = $versionContent['tpl_md5'];
-                $expireTime = $versionContent['tpl_expire_time'];
-                if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
-                    $this->parseTemplate($file);
-                }
-                if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
-                    $this->parseTemplate($file);
-                }
+                $expire_time = $versionContent['tpl_expire_time'];
             } else {
                 $this->parseTemplate($file);
+                $check_tpl = true;
             }
         } else {
             $versionfile = $this->getTplVersionFile($file);
             $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
             $md5data = $versionContent[0];
-            $expireTime = $versionContent[1];
+            $expire_time = $versionContent[1];
+        }
+        if ($check_tpl === false) {
             if ($this->options['auto_update'] === true && md5_file($this->getTplFile($file)) != $md5data) {
                 $this->parseTemplate($file);
             }
-            if ($this->options['cache_lifetime'] != 0 && (time() - $expireTime >= $this->options['cache_lifetime'] * 60)) {
+            if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
                 $this->parseTemplate($file);
             }
         }
@@ -508,9 +513,9 @@ class Template
         if ($this->options['cache_db'] !== false) {
             //Insert md5 and expiretime into cache database
             $md5data = md5_file($tplfile);
-            $expireTime = time();
+            $expire_time = time();
             $versionContent['tpl_md5'] = $md5data;
-            $versionContent['tpl_expire_time'] = $expireTime;
+            $versionContent['tpl_expire_time'] = $expire_time;
             if ($this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html') !== false) {
                 $this->updateVersion($this->dashPath($this->options['template_dir']), $file, 'html', $versionContent['tpl_md5'], $versionContent['tpl_expire_time'], '0');
             } else {
@@ -519,8 +524,8 @@ class Template
         } else {
             //Add md5 and expiretime check
             $md5data = md5_file($tplfile);
-            $expireTime = time();
-            $versionContent = "$md5data\r\n$expireTime";
+            $expire_time = time();
+            $versionContent = "$md5data\r\n$expire_time";
             $versionfile = $this->getTplVersionFile($file);
             file_put_contents($versionfile, $versionContent);
         }
