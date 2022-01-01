@@ -712,16 +712,19 @@ class Template
 
     private function parse_stripvtags_css1($matches)
     {
+        if ($this->options['css_dir'] === false) return $matches[1];
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSFile(\''.$matches[1].'\');?>');
     }
 
     private function parse_stripvtags_csstpl_1($matches)
     {
+        if ($this->options['css_dir'] === false) return $matches[1];
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', \''.$matches[2].'\');?>');
     }
 
     private function parse_stripvtags_csstpl_2($matches)
     {
+        if ($this->options['css_dir'] === false) return $matches[1];
         return $this->stripvTags('<? echo Template::getInstance()->loadCSSTemplate(\''.$matches[1].'\', '.$matches[2].');?>');
     }
 
@@ -825,6 +828,7 @@ class Template
 
     private function parse_stripvtags_js1($matches)
     {
+        if ($this->options['js_dir'] === false) return $matches[1];
         return $this->stripvTags('<? echo Template::getInstance()->loadJSFile(\''.$matches[1].'\');?>');
     }
 
