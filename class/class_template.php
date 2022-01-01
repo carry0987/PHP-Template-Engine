@@ -52,16 +52,20 @@ class Template
                 $this->options['template_dir'] = $value;
                 break;
             case 'css_dir':
-                $value = $this->trimPath($value);
-                if (!file_exists($value)) {
-                    $this->throwError('Couldn\'t found the specified css folder', $value);
+                if ($value !== false) {
+                    $value = $this->trimPath($value);
+                    if (!file_exists($value)) {
+                        $this->throwError('Couldn\'t found the specified css folder', $value);
+                    }
                 }
                 $this->options['css_dir'] = $value;
                 break;
             case 'js_dir':
-                $value = $this->trimPath($value);
-                if (!file_exists($value)) {
-                    $this->throwError('Couldn\'t found the specified js folder', $value);
+                if ($value !== false) {
+                    $value = $this->trimPath($value);
+                    if (!file_exists($value)) {
+                        $this->throwError('Couldn\'t found the specified js folder', $value);
+                    }
                 }
                 $this->options['js_dir'] = $value;
                 break;
