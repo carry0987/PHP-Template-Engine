@@ -504,6 +504,7 @@ class Template
 
         //Minify HTML
         if ($this->compress['html'] === true) {
+            $template = preg_replace_callback("/\<style type=\"text\/css\"\>(.*?)\<\/style\>/s", array($this, 'parse_css_minify'), $template);
             $template = $this->minifyHTML($template);
         }
 
@@ -862,6 +863,11 @@ class Template
         return $this->transAmp($matches[0]);
     }
 
+    private function parse_css_minify($matches)
+    {
+        return $this->stripStyleTags($this->minifyCSS($matches[1]));
+    }
+
     private function parse_stripscriptamp_12($matches)
     {
         return $this->stripScriptAmp($matches[1], $matches[2]);
@@ -946,6 +952,11 @@ class Template
         $expr = str_replace('\\\"', '\"', preg_replace("/\<\?\=(\\\$.+?)\?\>/s", "\\1", $expr));
         $statement = str_replace('\\\"', '\"', $statement);
         return $expr.$statement;
+    }
+
+    private function stripStyleTags($css)
+    {
+        return '<style type="text/css">'.$css.'</style>';
     }
 
     private function stripScriptAmp($s, $extra)
