@@ -1,13 +1,13 @@
 <?php
 class Template
 {
+    private static $instance;
     private $replacecode = array('search' => array(), 'replace' => array());
     private $blocks = array();
-    const DIR_SEP = DIRECTORY_SEPARATOR;
-    private static $instance;
     private $options = array();
     private $place = '';
     private $compress = array('html' => false, 'css' => true);
+    const DIR_SEP = DIRECTORY_SEPARATOR;
 
     //Get Instance
     public static function getInstance()
@@ -129,6 +129,14 @@ class Template
         return $hash;
     }
 
+    private function trimRelativePath($path)
+    {
+        $hash = substr_count($path, '../');
+        $hash = ($hash !== 0) ? substr(md5($hash), 0, 6) : '';
+        $path = str_replace('../', '', $path);
+        return $hash.'/'.$path;
+    }
+
     /* Static file cache */
     //Get CSS file path
     private function trimCSSName($file)
@@ -143,6 +151,7 @@ class Template
 
     private function getCSSCache($file, $place)
     {
+        $file = $this->trimRelativePath($file);
         $place = (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
@@ -151,6 +160,7 @@ class Template
     //Get CSS version file path
     private function getCSSVersionFile($file)
     {
+        $file = $this->trimRelativePath($file);
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
@@ -283,6 +293,7 @@ class Template
     //Get JS version file path
     private function getJSVersionFile($file)
     {
+        $file = $this->trimRelativePath($file);
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.jsversion.txt', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
