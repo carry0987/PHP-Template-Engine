@@ -132,9 +132,9 @@ class Template
     private function trimRelativePath($path)
     {
         $hash = substr_count($path, '../');
-        $hash = ($hash !== 0) ? substr(md5($hash), 0, 6) : '';
+        $hash = ($hash !== 0) ? substr(md5($hash), 0, 6).'/' : '';
         $path = str_replace('../', '', $path);
-        return $hash.'/'.$path;
+        return $hash.$path;
     }
 
     /* Static file cache */
@@ -200,7 +200,7 @@ class Template
     }
 
     //Check CSS file's change
-    private function cssVersionCheck($file, $place = false)
+    private function cssVersionCheck($file)
     {
         $result = array();
         $result['update'] = false;
