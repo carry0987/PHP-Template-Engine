@@ -166,7 +166,7 @@ class Template
     private function getCSSVersionFile($file)
     {
         $file = $this->trimRelativePath($file);
-        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.txt', $file);
+        $file = preg_replace('/\.[a-z0-9\-_]+$/i', '.cssversion.json', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.$file);
     }
 
@@ -196,14 +196,32 @@ class Template
                 $this->createVersion($this->dashPath($this->options['css_dir']), $trimed_name, 'css', $md5data, $expire_time, $verhash);
             }
         } else {
-            $versionContent = $md5data."\r\n".$verhash."\r\n".$expire_time;
+            $versionFile = $this->getCSSVersionFile($file);
+            if (file_exists($versionFile)) {
+                $versionContent = json_decode(file_get_contents($versionFile), true);
+            } else {
+                $versionContent = array(
+                    'main' => array(
+                        'md5' => $md5data,
+                        'verhash' => $verhash,
+                        'expire_time' => $expire_time
+                    )
+                );
+            }
+            if (!empty($this->place)) {
+                $versionContent['::'.$this->placeCSSName($this->place)] = array(
+                    'md5' => $md5data,
+                    'verhash' => $verhash,
+                    'expire_time' => $expire_time
+                );
+            }
+            $versionContent = json_encode($versionContent);
             //Write version file
-            $versionfile = $this->getCSSVersionFile($file);
-            $makepath = $this->makePath($versionfile);
+            $makepath = $this->makePath($versionFile);
             if ($makepath !== true) {
                 $this->throwError('Couldn\'t build CSS version folder', $makepath);
             }
-            file_put_contents($versionfile, $versionContent);
+            file_put_contents($versionFile, $versionContent);
         }
         return $verhash;
     }
@@ -225,10 +243,15 @@ class Template
         } else {
             $versionfile = $this->getCSSVersionFile($file);
             //Get file contents
-            $versionContent = file($versionfile, FILE_IGNORE_NEW_LINES);
-            $md5data = $versionContent[0];
-            $verhash = $versionContent[1];
-            $expire_time = $versionContent[2];
+            $versionContent = json_decode(file_get_contents($versionfile), true);
+            if (!empty($this->place) && isset($versionContent['::'.$this->placeCSSName($this->place)])) {
+                $versionContent = $versionContent['::'.$this->placeCSSName($this->place)];
+            } else {
+                $versionContent = $versionContent['main'];
+            }
+            $md5data = $versionContent['md5'];
+            $verhash = $versionContent['verhash'];
+            $expire_time = $versionContent['expire_time'];
         }
         //Check CSS md5
         $css_md5 = ($css_md5 === null) ? md5_file($this->getCSSFile($file)) : $css_md5;
