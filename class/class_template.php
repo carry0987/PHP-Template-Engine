@@ -144,6 +144,11 @@ class Template
         return str_replace('.css', '', $file);
     }
 
+    private function placeCSSName($place)
+    {
+        return (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
+    }
+
     private function getCSSFile($file)
     {
         return $this->trimPath($this->options['css_dir'].self::DIR_SEP.$file);
@@ -152,7 +157,7 @@ class Template
     private function getCSSCache($file, $place)
     {
         $file = $this->trimRelativePath($file);
-        $place = (is_array($place)) ? substr(md5(implode('-', $place)), 0, 6) : $place;
+        $place = $this->placeCSSName($place);
         $file = preg_replace('/\.[a-z0-9\-_]+$/i', '_'.$place.'.css', $file);
         return $this->trimPath($this->options['cache_dir'].self::DIR_SEP.'css'.self::DIR_SEP.$file);
     }
@@ -166,7 +171,7 @@ class Template
     }
 
     //Store CSS version value
-    private function cssSaveVersion($file)
+    private function cssSaveVersion($file, $css_md5 = null)
     {
         //Get CSS file
         $css_file = $this->getCSSFile($file);
@@ -175,16 +180,20 @@ class Template
             $this->throwError('CSS file not found or couldn\'t be opened', $css_file);
         }
         //Add md5 check
-        $md5data = md5_file($css_file);
+        $md5data = ($css_md5 === null) ? md5_file($css_file) : $css_md5;
         //Random length random()
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
         $expire_time = time();
         if ($this->options['cache_db'] !== false) {
-            if ($this->getVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css') !== false) {
-                $this->updateVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, $expire_time, $verhash);
+            $trimed_name = $this->trimCSSName($file);
+            if (!empty($this->place)) {
+                $trimed_name .= '::'.$this->placeCSSName($this->place);
+            }
+            if ($this->getVersion($this->dashPath($this->options['css_dir']), $trimed_name, 'css') !== false) {
+                $this->updateVersion($this->dashPath($this->options['css_dir']), $trimed_name, 'css', $md5data, $expire_time, $verhash);
             } else {
-                $this->createVersion($this->dashPath($this->options['css_dir']), $this->trimCSSName($file), 'css', $md5data, $expire_time, $verhash);
+                $this->createVersion($this->dashPath($this->options['css_dir']), $trimed_name, 'css', $md5data, $expire_time, $verhash);
             }
         } else {
             $versionContent = $md5data."\r\n".$verhash."\r\n".$expire_time;
@@ -200,12 +209,15 @@ class Template
     }
 
     //Check CSS file's change
-    private function cssVersionCheck($file)
+    private function cssVersionCheck($file, $css_md5 = null)
     {
         $result = array();
         $result['update'] = false;
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
+            if (!empty($this->place)) {
+                $css_file .= '::'.$this->placeCSSName($this->place);
+            }
             $static_data = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
             $md5data = $static_data['tpl_md5'];
             $verhash = $static_data['tpl_verhash'];
@@ -218,13 +230,15 @@ class Template
             $verhash = $versionContent[1];
             $expire_time = $versionContent[2];
         }
-        if ($this->options['auto_update'] === true && md5_file($this->getCSSFile($file)) !== $md5data) {
+        //Check CSS md5
+        $css_md5 = ($css_md5 === null) ? md5_file($this->getCSSFile($file)) : $css_md5;
+        if ($this->options['auto_update'] === true && $css_md5 !== $md5data) {
             $result['update'] = true;
         }
         if ($this->options['cache_lifetime'] != 0 && (time() - $expire_time >= $this->options['cache_lifetime'] * 60)) {
-            $result['update'] = (md5_file($this->getCSSFile($file)) !== $md5data) ? true : false;
+            $result['update'] = ($css_md5 !== $md5data) ? true : false;
         }
-        $result['verhash'] = ($result['update'] === true) ? $this->cssSaveVersion($file) : $verhash;
+        $result['verhash'] = ($result['update'] === true) ? $this->cssSaveVersion($file, $css_md5) : $verhash;
         return $result;
     }
 
@@ -262,17 +276,24 @@ class Template
         $this->place = $place;
         if ($this->options['cache_db'] !== false) {
             $css_file = $this->trimCSSName($file);
+            if (!empty($place)) {
+                $css_file .= '::'.$this->placeCSSName($place);
+            }
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
         } else {
             $versionfile = $this->getCSSVersionFile($file);
             $css_version = (!file_exists($versionfile)) ? false : true;
         }
+        //Get CSS model md5
+        $css_md5 = $this->parseCSSTemplate($file, $place, true);
+        //Check the need of saving version
         if ($css_version === false) {
-            $this->cssSaveVersion($file);
+            $this->cssSaveVersion($file, $css_md5);
         }
-        $css_version_check = $this->cssVersionCheck($file);
-        $verhash = $css_version_check['verhash'];
+        //Get CSS cache file path
         $css_cache_file = $this->getCSSCache($file, $place);
+        $css_version_check = $this->cssVersionCheck($file, $css_md5);
+        $verhash = $css_version_check['verhash'];
         if (!file_exists($css_cache_file) || $css_version_check['update'] === true || $css_version === false) {
             $this->parseCSSTemplate($file, $place);
         }
@@ -762,7 +783,7 @@ class Template
     }
 
     //Parse CSS Template
-    private function parseCSSTemplate($file, $place)
+    private function parseCSSTemplate($file, $place, $get_md5 = false)
     {
         $css_tplfile = $this->getCSSFile($file);
         if (!is_readable($css_tplfile)) {
@@ -774,11 +795,16 @@ class Template
             $place_array = array();
             foreach ($place as $value) {
                 $contents = preg_match("/\/\*\[$value\]\*\/\s(.*?)\/\*\[\/$value\]\*\//is", $content, $matches);
-                $place_array[$value] = $this->parse_csstpl($contents, $matches, $value);
+                $place_array[$value] = $matches[1];
+                if ($get_md5 === false) {
+                    $place_array[$value] = $this->parse_csstpl($contents, $matches, $value);
+                }
             }
+            if ($get_md5 !== false) return md5(implode("\n", $place_array));
             $content = implode("\n", $place_array);
         } else {
             $content = preg_match("/\/\*\[$place\]\*\/\s(.*?)\/\*\[\/$place\]\*\//is", $content, $matches);
+            if ($get_md5 !== false) return md5($matches[1]);
             $content = $this->parse_csstpl($content, $matches, $place);
         }
         //Write into cache file
