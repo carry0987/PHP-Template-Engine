@@ -2,5 +2,6 @@
 .DS_Store
 cache/*.txt
 cache/*.css
+cache/*.json
 cache/*.php
 cache/css
