@@ -646,9 +646,8 @@ class Template
                     $tpl_row['tpl_verhash'] = $tpl_verhash;
                 }
                 return $tpl_row;
-            } else {
-                return false;
             }
+            return false;
         } catch (mysqli_sql_exception $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
