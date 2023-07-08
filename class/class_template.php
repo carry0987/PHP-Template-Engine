@@ -93,7 +93,7 @@ class Template
                 }
                 break;
             default:
-                $this->throwError('Unknow template setting options', $name);
+                $this->throwError('Unknown template setting options', $name);
                 break;
         }
     }
@@ -103,14 +103,14 @@ class Template
         $this->setTemplate($name, $value);
     }
 
-    public function compressHTML($value)
+    public function compressHTML($html)
     {
-        $this->compress['html'] = $value;
+        $this->compress['html'] = $html;
     }
 
-    public function compressCSS($value)
+    public function compressCSS($css)
     {
-        $this->compress['css'] = $value;
+        $this->compress['css'] = $css;
     }
 
     private function generateRandom($length, $numeric = 0)
@@ -707,7 +707,7 @@ class Template
         $tmp = '';
         foreach ($dirs as $dir) {
             $tmp = $tmp.$dir.self::DIR_SEP;
-            if (!file_exists($tmp) && !mkdir($tmp, 0755)) {
+            if (!file_exists($tmp) && !mkdir($tmp, 0755, true)) {
                 return $tmp;
             }
         }
@@ -797,7 +797,7 @@ class Template
         $cachefile = $this->getCSSCache($file, $place);
         $makepath = $this->makePath($cachefile);
         if ($makepath !== true) {
-            $this->throwError('Can\'t build template folder', $makepath);
+            $this->throwError('Can\'t create template folder', $makepath);
         } else {
             file_put_contents($cachefile, $content."\n");
         }
@@ -1032,11 +1032,11 @@ class Template
     }
 
     //Throw database error excetpion
-    private function throwDBError($message, $code)
+    private function throwDBError($errorMessage, $errorCode)
     {
         $error = '<h1>Service unavailable</h1>'."\n";
-        $error .= '<h2>Error Info :'.$message.'</h2>'."\n";
-        $error .= '<h3>Error Code :'.$code.'</h3>'."\n";
+        $error .= '<h2>Error Info :'.$errorMessage.'</h2>'."\n";
+        $error .= '<h3>Error Code :'.$errorCode.'</h3>'."\n";
         return $error;
     }
 }
