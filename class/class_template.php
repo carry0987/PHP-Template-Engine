@@ -487,10 +487,15 @@ class Template
 
         //Get template contents
         $template = file_get_contents($tplfile);
+        $preserve_regexp = '/\<\!\-\-\{PRESERVE\}\-\-\>(.*?)\<\!\-\-\\{\/PRESERVE\}\-\-\>/s';
         $var_simple_regexp = "(\\\$[a-zA-Z0-9_\-\>\[\]\'\"\$\.\x7f-\xff]+)";
         $var_regexp = "((\\\$[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*(\-\>)?[a-zA-Z0-9_\x7f-\xff]*)(\[[a-zA-Z0-9_\-\.\"\'\[\]\$\x7f-\xff]+\])*)";
         $const_regexp = "([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)";
         $template = preg_replace("/([\n\r]+)\t+/s", "\\1", $template);
+
+        //Preserve specific block
+        preg_match_all($preserve_regexp, $template, $preserves);
+        $template = preg_replace($preserve_regexp, '##PRESERVE##', $template);
 
         //Filter <!--{}-->
         $template = preg_replace("/\h*\<\!\-\-\{(.+?)\}\-\-\>/s", "{\\1}", $template);
@@ -561,6 +566,10 @@ class Template
         if ($this->compress['html'] === true) {
             $template = preg_replace_callback("/\<style type=\"text\/css\"\>(.*?)\<\/style\>/s", array($this, 'parse_css_minify'), $template);
             $template = $this->minifyHTML($template);
+        }
+
+        foreach ($preserves[1] as $preserve) {
+            $template = preg_replace('/##PRESERVE##/', trim($preserve), $template, 1);
         }
 
         //Write into cache file

@@ -78,7 +78,7 @@ HTML
 /* END index */
 ```
 
-Also, with `array`
+Also, with **`array`**
 ```html
 <!--{eval $current_page = array('index','test')}-->
 <link href="{loadcss model.css $current_page}" rel="stylesheet" type="text/css">
@@ -231,6 +231,18 @@ PHP
 ```php
 <?php eval $value = 1+2;?>
 <span><?php echo $value; ?></span>
+```
+
+## **`PRESERVE`** mark
+html
+```html
+<!--{PRESERVE}-->
+<span>html content</span>
+<!--{/PRESERVE}-->
+```
+PHP
+```php
+<span>html content</span>
 ```
 
 ## Thanks
