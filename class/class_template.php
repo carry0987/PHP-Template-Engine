@@ -25,6 +25,7 @@ class Template
             'template_dir' => 'templates'.self::DIR_SEP,
             'css_dir' => 'css'.self::DIR_SEP,
             'js_dir' => 'js'.self::DIR_SEP,
+            'static_dir' => 'static'.self::DIR_SEP,
             'cache_dir' => 'templates'.self::DIR_SEP.'cache'.self::DIR_SEP,
             'auto_update' => false,
             'cache_lifetime' => 0,
@@ -68,6 +69,15 @@ class Template
                     }
                 }
                 $this->options['js_dir'] = $value;
+                break;
+            case 'static_dir':
+                if ($value !== false) {
+                    $value = $this->trimPath($value);
+                    if (!file_exists($value)) {
+                        $this->throwError('Couldn\'t found the specified static folder', $value);
+                    }
+                }
+                $this->options['static_dir'] = $value;
                 break;
             case 'cache_dir':
                 $value = $this->trimPath($value);
@@ -532,6 +542,9 @@ class Template
         //Replace jsloader
         $template = preg_replace_callback("/\{loadjs\s+(\S+)\}/is", array($this, 'parse_stripvtags_js1'), $template);
 
+        //Replace static file loader
+        $template = preg_replace_callback("/\{static\s+(\S+)\}/is", array($this, 'parse_stripvtags_static1'), $template);
+
         //Replace if/else script
         $template = preg_replace_callback("/\{if\s+(.+?)\}/is", array($this, 'parse_stripvtags_if1'), $template);
         $template = preg_replace_callback("/\{elseif\s+(.+?)\}/is", array($this, 'parse_stripvtags_elseif1'), $template);
@@ -899,6 +912,12 @@ class Template
     {
         if ($this->options['js_dir'] === false) return $matches[1];
         return $this->stripvTags('<? echo Template::getInstance()->loadJSFile(\''.$matches[1].'\');?>');
+    }
+
+    private function parse_stripvtags_static1($matches)
+    {
+        if ($this->options['static_dir'] === false) return $matches[1];
+        return $this->stripvTags($this->options['static_dir'].$matches[1]);
     }
 
     private function parse_stripvtags_echo1($matches)

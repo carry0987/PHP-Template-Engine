@@ -21,6 +21,7 @@ $options = array(
     'template_dir' => 'template',
     'css_dir' => 'static/css/', //Set css file's cache
     'js_dir' => 'static/js/', //Set js file's cache
+    'static_dir' => 'static/', //Set static file's directory
     'auto_update' => true, //Set 'false' to turn off auto update template
     'cache_lifetime' => 0, //Set cache file's lifetime (minute)
     'cache_db' => false //Set 'false' to save cache version at local directory
@@ -36,6 +37,7 @@ $options = array(
     'template_dir' => 'template',
     'css_dir' => 'static/css/', //Set css file's cache
     'js_dir' => 'static/js/', //Set js file's cache
+    'static_dir' => 'static/', //Set static file's directory
     'auto_update' => true, //Set 'false' to turn off auto update template
     'cache_lifetime' => 0, //Set cache file's lifetime (minute)
     'cache_db' => $connectdb //Give connection variable to save cache version into database
@@ -138,6 +140,16 @@ html
 Output:
 ```html
 <script src="static/js/jquery.min.js?v=B22PE8W" type="text/javascript"></script>
+```
+
+#### Static File
+html
+```html
+<img src="{static img/logo.png}" alt="logo">
+```
+Output:
+```html
+<img src="static/img/logo.png" alt="logo">
 ```
 
 ## Functions
