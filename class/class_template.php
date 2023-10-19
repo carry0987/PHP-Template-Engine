@@ -7,7 +7,7 @@ class Template
     private $options = array();
     private $place = '';
     private $compress = array('html' => false, 'css' => true);
-    private \PDO $connectdb = null;
+    private $connectdb = null;
     const DIR_SEP = DIRECTORY_SEPARATOR;
 
     //Get Instance
