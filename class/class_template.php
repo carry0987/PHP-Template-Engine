@@ -657,9 +657,9 @@ class Template
         $tpl_row = array();
         try {
             $tpl_stmt = $this->connectdb->prepare($tpl_query);
-            $tpl_stmt->bindParam(1, $get_tpl_path, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(2, $get_tpl_name, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(3, $get_tpl_type,PDO::PARAM_STR);
+            $tpl_stmt->bindValue(1, $get_tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(2, $get_tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(3, $get_tpl_type,PDO::PARAM_STR);
             $tpl_stmt->execute();
             $tpl_row = $tpl_stmt->fetch(PDO::FETCH_ASSOC);
             if (!empty($tpl_row)) {
@@ -678,12 +678,12 @@ class Template
         $tpl_query = 'INSERT INTO template (tpl_path, tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?,?)';
         try {
             $tpl_stmt = $this->connectdb->prepare($tpl_query);
-            $tpl_stmt->bindParam(1, $tpl_path, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(2, $tpl_name, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(3, $tpl_type, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(4, $tpl_md5, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(5, $tpl_expire_time, PDO::PARAM_INT);
-            $tpl_stmt->bindParam(6, $tpl_verhash, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(1, $tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(2, $tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(3, $tpl_type, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(4, $tpl_md5, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(5, $tpl_expire_time, PDO::PARAM_INT);
+            $tpl_stmt->bindValue(6, $tpl_verhash, PDO::PARAM_STR);
             $tpl_stmt->execute();
         } catch (PDOException $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
@@ -697,12 +697,12 @@ class Template
         $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
         try {
             $tpl_stmt = $this->connectdb->prepare($tpl_query);
-            $tpl_stmt->bindParam(1, $tpl_md5, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(2, $tpl_expire_time, PDO::PARAM_INT);
-            $tpl_stmt->bindParam(3, $tpl_verhash, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(4, $tpl_path, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(5, $tpl_name, PDO::PARAM_STR);
-            $tpl_stmt->bindParam(6, $tpl_type, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(1, $tpl_md5, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(2, $tpl_expire_time, PDO::PARAM_INT);
+            $tpl_stmt->bindValue(3, $tpl_verhash, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(4, $tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(5, $tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindValue(6, $tpl_type, PDO::PARAM_STR);
             $tpl_stmt->execute();
         } catch (PDOException $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
