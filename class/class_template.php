@@ -7,6 +7,7 @@ class Template
     private $options = array();
     private $place = '';
     private $compress = array('html' => false, 'css' => true);
+    private \PDO $connectdb = null;
     const DIR_SEP = DIRECTORY_SEPARATOR;
 
     //Get Instance
@@ -99,7 +100,7 @@ class Template
                 if ($value === false) {
                     $this->options['cache_db'] = false;
                 } else {
-                    $this->options['cache_db'] = $value;
+                    $this->connectdb = $value;
                 }
                 break;
             default:
@@ -195,7 +196,7 @@ class Template
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
         $expire_time = time();
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $trimed_name = $this->trimCSSName($file);
             if (!empty($this->place)) {
                 $trimed_name .= '::'.$this->placeCSSName($this->place);
@@ -241,7 +242,7 @@ class Template
     {
         $result = array();
         $result['update'] = false;
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $css_file = $this->trimCSSName($file);
             if (!empty($this->place)) {
                 $css_file .= '::'.$this->placeCSSName($this->place);
@@ -279,7 +280,7 @@ class Template
     public function loadCSSFile($file)
     {
         $place = 'minified';
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $css_file = $this->trimCSSName($file);
             $css_version = $this->getVersion($this->dashPath($this->options['css_dir']), $css_file, 'css');
         } else {
@@ -307,7 +308,7 @@ class Template
             $place = (count($place) > 1) ? $place : $place[0];
         }
         $this->place = $place;
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $css_file = $this->trimCSSName($file);
             if (!empty($place)) {
                 $css_file .= '::'.$this->placeCSSName($place);
@@ -367,7 +368,7 @@ class Template
         $verhash = $this->generateRandom(7);
         //Insert md5 & verhash
         $expire_time = time();
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             if ($this->getVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js') !== false) {
                 $this->updateVersion($this->dashPath($this->options['js_dir']), $this->trimJSName($file), 'js', $md5data, $expire_time, $verhash);
             } else {
@@ -391,7 +392,7 @@ class Template
     {
         $result = array();
         $result['update'] = false;
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $js_file = $this->trimJSName($file);
             $static_data = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
             $md5data = $static_data['tpl_md5'];
@@ -418,7 +419,7 @@ class Template
     //Load JS files
     public function loadJSFile($file)
     {
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $js_file = $this->trimJSName($file);
             $js_version = $this->getVersion($this->dashPath($this->options['js_dir']), $js_file, 'js');
         } else {
@@ -434,7 +435,7 @@ class Template
     /* Template file cache */
     public function loadTemplate($file)
     {
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $versionContent = $this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html');
             if ($versionContent === false) {
                 $this->parseTemplate($file);
@@ -462,7 +463,7 @@ class Template
     private function checkTemplate($file)
     {
         $check_tpl = false;
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             $versionContent = $this->getVersion($this->dashPath($this->options['template_dir']), $file, 'html');
             if ($versionContent !== false) {
                 $md5data = $versionContent['tpl_md5'];
@@ -594,7 +595,7 @@ class Template
             file_put_contents($cachefile, $template."\n");
         }
 
-        if ($this->options['cache_db'] !== false) {
+        if ($this->connectdb !== null) {
             //Insert md5 and expiretime into cache database
             $md5data = md5_file($tplfile);
             $expire_time = time();
@@ -653,24 +654,19 @@ class Template
     {
         $get_tpl_name = $this->trimTplName($get_tpl_name);
         $tpl_query = 'SELECT tpl_md5, tpl_expire_time, tpl_verhash FROM template WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
-        $tpl_stmt = $this->options['cache_db']->stmt_init();
         $tpl_row = array();
         try {
-            $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('sss', $get_tpl_path, $get_tpl_name, $get_tpl_type);
+            $tpl_stmt = $this->connectdb->prepare($tpl_query);
+            $tpl_stmt->bindParam(1, $get_tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(2, $get_tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(3, $get_tpl_type,PDO::PARAM_STR);
             $tpl_stmt->execute();
-            $tpl_stmt->store_result();
-            $tpl_stmt->bind_result($tpl_md5, $tpl_expire_time, $tpl_verhash);
-            if ($tpl_stmt->num_rows != 0) {
-                while ($tpl_stmt->fetch()) {
-                    $tpl_row['tpl_md5'] = $tpl_md5;
-                    $tpl_row['tpl_expire_time'] = $tpl_expire_time;
-                    $tpl_row['tpl_verhash'] = $tpl_verhash;
-                }
+            $tpl_row = $tpl_stmt->fetch(PDO::FETCH_ASSOC);
+            if (!empty($tpl_row)) {
                 return $tpl_row;
             }
             return false;
-        } catch (mysqli_sql_exception $e) {
+        } catch (PDOException $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
@@ -680,19 +676,16 @@ class Template
     {
         $tpl_name = $this->trimTplName($tpl_name);
         $tpl_query = 'INSERT INTO template (tpl_path, tpl_name, tpl_type, tpl_md5, tpl_expire_time, tpl_verhash) VALUES (?,?,?,?,?,?)';
-        $tpl_stmt = $this->options['cache_db']->stmt_init();
         try {
-            $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('ssssis', 
-                $tpl_path, 
-                $tpl_name, 
-                $tpl_type, 
-                $tpl_md5, 
-                $tpl_expire_time, 
-                $tpl_verhash
-            );
+            $tpl_stmt = $this->connectdb->prepare($tpl_query);
+            $tpl_stmt->bindParam(1, $tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(2, $tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(3, $tpl_type, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(4, $tpl_md5, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(5, $tpl_expire_time, PDO::PARAM_INT);
+            $tpl_stmt->bindParam(6, $tpl_verhash, PDO::PARAM_STR);
             $tpl_stmt->execute();
-        } catch (mysqli_sql_exception $e) {
+        } catch (PDOException $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
@@ -702,19 +695,16 @@ class Template
     {
         $tpl_name = $this->trimTplName($tpl_name);
         $tpl_query = 'UPDATE template SET tpl_md5 = ?, tpl_expire_time = ?, tpl_verhash = ? WHERE tpl_path = ? AND tpl_name = ? AND tpl_type = ?';
-        $tpl_stmt = $this->options['cache_db']->stmt_init();
         try {
-            $tpl_stmt->prepare($tpl_query);
-            $tpl_stmt->bind_param('sissss', 
-                $tpl_md5, 
-                $tpl_expire_time, 
-                $tpl_verhash, 
-                $tpl_path, 
-                $tpl_name, 
-                $tpl_type
-            );
+            $tpl_stmt = $this->connectdb->prepare($tpl_query);
+            $tpl_stmt->bindParam(1, $tpl_md5, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(2, $tpl_expire_time, PDO::PARAM_INT);
+            $tpl_stmt->bindParam(3, $tpl_verhash, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(4, $tpl_path, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(5, $tpl_name, PDO::PARAM_STR);
+            $tpl_stmt->bindParam(6, $tpl_type, PDO::PARAM_STR);
             $tpl_stmt->execute();
-        } catch (mysqli_sql_exception $e) {
+        } catch (PDOException $e) {
             echo $this->throwDBError($e->getMessage(), $e->getCode());
             exit();
         }
