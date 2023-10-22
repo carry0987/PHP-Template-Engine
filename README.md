@@ -251,10 +251,21 @@ html
 <!--{PRESERVE}-->
 <span>html content</span>
 <!--{/PRESERVE}-->
+/*{PRESERVE}*/
+<script>
+const value = 1+2;
+document.querySelector('span').innerHTML = `Value: ${value}`;
+</script>
+/*{/PRESERVE}*/
 ```
 PHP
 ```php
 <span>html content</span>
+<script>
+const value = 1+2;
+document.querySelector('span').innerHTML = `Value: ${value}`;
+</script>
+```
 ```
 
 ## Thanks
