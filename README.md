@@ -1,6 +1,9 @@
 # Template-Engine
 Small &amp; fast php template engine
 
+## Note
+This project have been **archived**, the new one is [Here](Https://github.com/carry0987/TemplateEngine), using `Composer`.
+
 ## Requires
 PHP 7.0 or newer
 
@@ -265,7 +268,6 @@ PHP
 const value = 1+2;
 document.querySelector('span').innerHTML = `Value: ${value}`;
 </script>
-```
 ```
 
 ## Thanks
